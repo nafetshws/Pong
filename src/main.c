@@ -4,9 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-
-
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 void error_callback(int error, const char* description);
 void user_close_callback(GLFWwindow* window);
@@ -63,11 +60,15 @@ int main(){
   }
 
   float vertices[] = {
-    -0.5f, -0.5f, 0.f,
-    0.5f, -0.5f, 0.f,
-    0.f, 0.5f, 0.f,
-  };
-
+    // first triangle
+     0.5f,  0.5f, 0.0f,  // top right
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f,  0.5f, 0.0f,  // top left 
+    // second triangle
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f, -0.5f, 0.0f,  // bottom left
+    -0.5f,  0.5f, 0.0f   // top left
+  }; 
 
   unsigned int vertexShader;
   vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -136,7 +137,7 @@ int main(){
 
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
