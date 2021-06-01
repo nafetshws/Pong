@@ -128,6 +128,8 @@ int main(){
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
   //events
   //input
   glfwSetKeyCallback(window, key_callback);
@@ -137,7 +139,7 @@ int main(){
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   while(!glfwWindowShouldClose(window)){
-    //window is open
+    //render
     glClearColor(0.2f, 0.3f, 0.3f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
