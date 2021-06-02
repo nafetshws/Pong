@@ -16,17 +16,25 @@ static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, 
 //read shader file
 const char* loadShader(const char* path);
 
+//shader path
+const char* VERTEX_SHADER_PATH = "src/shader/vertexShader.vs";
+const char* FRAGMENT_SHADER_PATH = "src/shader/fragmentShader.fs";
+//window properties
+const unsigned int WIDTH = 800;
+const unsigned int HEIGHT = 600;
+const char* title = "Pong"; 
 
 int main(){  
 
-  const char* vertexShaderSource = loadShader("src/shader/vertexShader.vert");
-  const char* fragmentShaderSource = loadShader("src/shader/fragmentShader.vert");
+  const char* vertexShaderSource = loadShader(VERTEX_SHADER_PATH);
+  const char* fragmentShaderSource = loadShader(FRAGMENT_SHADER_PATH);
 
   glfwSetErrorCallback(error_callback);
   if(!glfwInit()){
     printf("Failed to initialize\n");
     exit(EXIT_FAILURE);
   }
+
 
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   //version that every graphics driver supports
@@ -35,7 +43,8 @@ int main(){
   //set core profile
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   //create window
-  GLFWwindow* window = glfwCreateWindow(680, 480, "Pong", NULL, NULL);
+  GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, title, NULL, NULL);
+
 
   if(!window){
     printf("Failed to create window :(\n");
@@ -52,11 +61,12 @@ int main(){
     return -1;
   }
 
+
   float vertices[] = {
-    0.5f, 0.5f, 0.f, //top right
-    -0.5f, 0.5f, 0.f, //top left
-    0.5f, -0.5f, 0.f, //bottom right
-    -0.5f, -0.5f, 0.f, //bottom left
+    // positions         // colors
+     0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+    -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
   }; 
 
   unsigned int indices[] = {
@@ -64,8 +74,6 @@ int main(){
     1, 3, 2 // second triangle 
 
   };
-
-  printf("opengl version is %s\n", glGetString(GL_VERSION));
 
   unsigned int vertexShader;
   vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -79,6 +87,8 @@ int main(){
     glGetShaderInfoLog(vertexShader, 1024, NULL, infoLog);
     printf("shader vertex compilation failed: %s\n", infoLog);
   }
+
+
 
   unsigned int fragmentShader;
   fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -105,6 +115,7 @@ int main(){
     glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
   }
 
+
   //don't need the shaders anymore -> got the shaderProgram
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
@@ -120,8 +131,12 @@ int main(){
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
+
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
+  glEnableVertexAttribArray(1);
 
   //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -140,15 +155,8 @@ int main(){
 
     glUseProgram(shaderProgram);
 
-    float timeValue = glfwGetTime();
-    float greenValue = (sin(timeValue)/2.f) +0.5;
-    int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-    glUniform4f(vertexColorLocation, 0.f, greenValue, 0.f, 1.f);
-
     glBindVertexArray(VAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    //glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -178,7 +186,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 
 
 static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, int mods){
-  //printf("key pressed: %d\n", key);
   double time = glfwGetTime();
   double lastTime;
   int lastKey;
