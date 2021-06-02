@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define BUFFER_SIZE 1000
 
@@ -26,7 +27,6 @@ int main(){
     printf("Failed to initialize\n");
     exit(EXIT_FAILURE);
   }
-  printf("Successfully initialized\n");
 
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   //version that every graphics driver supports
@@ -45,14 +45,11 @@ int main(){
   //set context
   glfwMakeContextCurrent(window);
   
-  //extensio loader libary
+  //extension loader libary
   int result = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
   if(!result){
     printf("Failed to init GLAD\n");
     return -1;
-  }
-  else{
-    printf("successfully loaded glad\n");
   }
 
   float vertices[] = {
@@ -68,16 +65,18 @@ int main(){
 
   };
 
+  printf("opengl version is %s\n", glGetString(GL_VERSION));
+
   unsigned int vertexShader;
   vertexShader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
   glCompileShader(vertexShader);
 
   int success;
-  char infoLog[512];
+  char infoLog[1024];
   glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
   if(!success){
-    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+    glGetShaderInfoLog(vertexShader, 1024, NULL, infoLog);
     printf("shader vertex compilation failed: %s\n", infoLog);
   }
 
@@ -140,6 +139,12 @@ int main(){
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
+
+    float timeValue = glfwGetTime();
+    float greenValue = (sin(timeValue)/2.f) +0.5;
+    int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+    glUniform4f(vertexColorLocation, 0.f, greenValue, 0.f, 1.f);
+
     glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
