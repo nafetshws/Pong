@@ -4,26 +4,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define BUFFER_SIZE 1000
+
+//callbacks
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 void error_callback(int error, const char* description);
 void user_close_callback(GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, int mods);
+//read shader file
+const char* loadShader(const char* path);
 
-const char* vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"void main(){\n"
-"gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"}\0";
-
-const char* fragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main(){\n"
-"FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-"}\0";
 
 int main(){  
 
+  const char* vertexShaderSource = loadShader("src/shader/vertexShader.vert");
+  const char* fragmentShaderSource = loadShader("src/shader/fragmentShader.vert");
 
   glfwSetErrorCallback(error_callback);
   if(!glfwInit()){
@@ -194,4 +190,25 @@ static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, 
     height = 1200;
     glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), xpos, ypos, width, height, GLFW_DONT_CARE);
     }
+}
+
+const char* loadShader(const char* path){
+  FILE* f = fopen(path, "rb");
+  long length;
+  char* buffer = 0;
+  if(f){
+    fseek(f, 0, SEEK_END);
+    length = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    buffer = malloc(length);
+    if(buffer){
+      fread(buffer, 1, length, f);
+    }
+    fclose(f);
+  }
+  if(buffer){
+    return buffer;
+  }
+
+  return NULL; 
 }
