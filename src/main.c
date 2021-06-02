@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <unistd.h>
+#include "../include/shader.h" 
 
 #define BUFFER_SIZE 1000
 
@@ -25,16 +27,15 @@ const unsigned int HEIGHT = 600;
 const char* title = "Pong"; 
 
 int main(){  
-
-  const char* vertexShaderSource = loadShader(VERTEX_SHADER_PATH);
-  const char* fragmentShaderSource = loadShader(FRAGMENT_SHADER_PATH);
+  
+  //const char* vertexShaderSource = loadShader(VERTEX_SHADER_PATH);
+  //const char* fragmentShaderSource = loadShader(FRAGMENT_SHADER_PATH);
 
   glfwSetErrorCallback(error_callback);
   if(!glfwInit()){
     printf("Failed to initialize\n");
     exit(EXIT_FAILURE);
   }
-
 
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   //version that every graphics driver supports
@@ -75,50 +76,10 @@ int main(){
 
   };
 
-  unsigned int vertexShader;
-  vertexShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-  glCompileShader(vertexShader);
-
-  int success;
-  char infoLog[1024];
-  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-  if(!success){
-    glGetShaderInfoLog(vertexShader, 1024, NULL, infoLog);
-    printf("shader vertex compilation failed: %s\n", infoLog);
-  }
-
-
-
-  unsigned int fragmentShader;
-  fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-  glCompileShader(fragmentShader);
-
-  glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-  if(!success){
-    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-    printf("shader vertex compilation failed: %s\n", infoLog);
-  }
-  
-
-  //shader program
-  unsigned int shaderProgram;
-  shaderProgram = glCreateProgram();
-  glAttachShader(shaderProgram, vertexShader);
-  glAttachShader(shaderProgram, fragmentShader);
-  glLinkProgram(shaderProgram);
-
-  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-  if(!success){
-    printf("Failed to link shaders\n");
-    glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-  }
-
-
-  //don't need the shaders anymore -> got the shaderProgram
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentShader);
+  //load shaders + compile them to shader program
+  unsigned int programId;
+  shCompileShader(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH, &programId);
+  //Shader triangleShader(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
 
   //create vertex buffer object, vertex array object and element buffer object
   unsigned int VBO, VAO, EBO;
@@ -153,7 +114,7 @@ int main(){
     glClearColor(0.2f, 0.3f, 0.3f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(shaderProgram);
+    shUse(programId);
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
