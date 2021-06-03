@@ -1,4 +1,6 @@
 #define GLFW_INCLUDE_GLU
+#define STB_IMAGE_IMPLEMENTATION
+//#include "../include/glad/glad/glad.h" 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
@@ -6,6 +8,7 @@
 #include <math.h>
 #include <unistd.h>
 #include "../include/shader.h" 
+#include "../include/stb_image.h" 
 
 #define BUFFER_SIZE 1000
 
@@ -17,6 +20,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, int mods);
 //read shader file
 const char* loadShader(const char* path);
+//uitl
+int exists(const char* path);
+void check4error(float* checkpoint);
 
 //shader path
 const char* VERTEX_SHADER_PATH = "src/shader/vertexShader.vs";
@@ -26,11 +32,10 @@ const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
 const char* title = "Pong"; 
 
-int main(){  
-  
-  //const char* vertexShaderSource = loadShader(VERTEX_SHADER_PATH);
-  //const char* fragmentShaderSource = loadShader(FRAGMENT_SHADER_PATH);
+float cp = 0.f;
 
+int main(){  
+ 
   glfwSetErrorCallback(error_callback);
   if(!glfwInit()){
     printf("Failed to initialize\n");
@@ -62,24 +67,32 @@ int main(){
     return -1;
   }
 
+  //events
+  //input
+  glfwSetKeyCallback(window, key_callback);
+  glfwSetCursorPosCallback(window, cursor_position_callback);
+
+  glfwSetWindowCloseCallback(window, user_close_callback);
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
 
   float vertices[] = {
-    // positions         // colors
-     0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-    -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
-  }; 
-
-  unsigned int indices[] = {
-    0, 1, 2, //first triangle
-    1, 3, 2 // second triangle 
-
+      // positions          // colors           // texture coords
+       0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+       0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+      -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+      -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
   };
 
+  unsigned int indices[] = {
+    0, 1, 3, //first triangle
+    1, 2, 3 // second triangle 
+
+  };
+  
   //load shaders + compile them to shader program
   unsigned int programId;
   shCompileShader(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH, &programId);
-  //Shader triangleShader(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
 
   //create vertex buffer object, vertex array object and element buffer object
   unsigned int VBO, VAO, EBO;
@@ -92,32 +105,55 @@ int main(){
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
   glEnableVertexAttribArray(1);
 
-  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
+  glEnableVertexAttribArray(2);
+ 
+  //textures
+  unsigned int texture1;
+  glGenTextures(1, &texture1);
+  glBindTexture(GL_TEXTURE_2D, texture1);
+  //filtering options
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //downscaling
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); //upscaling
+  //wrapping
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); 
 
-  //events
-  //input
-  glfwSetKeyCallback(window, key_callback);
-  glfwSetCursorPosCallback(window, cursor_position_callback);
+  int width, height, nrChannels;
+  char* pathToTex = "src/textures/container.jpg";
+  int doesFileExist = exists(pathToTex);
+  if(!doesFileExist){ 
+    return -1;
+  }
+  //load first texture
+  unsigned char* data = stbi_load("src/textures/container.jpg", &width, &height, &nrChannels, 0);
+  if(data){
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+  }
+  else{
+    printf("Failed to load data into memory\n");
+  }
 
-  glfwSetWindowCloseCallback(window, user_close_callback);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  stbi_image_free(data);
 
   while(!glfwWindowShouldClose(window)){
     //render
     glClearColor(0.2f, 0.3f, 0.3f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    shUse(programId);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture1);
 
+    shUse(programId);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -165,23 +201,22 @@ static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, 
     }
 }
 
-const char* loadShader(const char* path){
-  FILE* f = fopen(path, "rb");
-  long length;
-  char* buffer = 0;
-  if(f){
-    fseek(f, 0, SEEK_END);
-    length = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    buffer = malloc(length);
-    if(buffer){
-      fread(buffer, 1, length, f);
-    }
-    fclose(f);
+int exists(const char* path){
+  FILE* f; 
+  if((f = fopen(path, "rb"))){
+    //file exists
+    printf("file exists\n");
+    return 1;
   }
-  if(buffer){
-    return buffer;
-  }
+  printf("File: %s doesn't exist\n", path);
+  return 0;
+  
+}
 
-  return NULL; 
+void check4error(float* checkpoint){
+  GLenum error = glGetError(); 
+  if(error){
+    if(checkpoint){printf("Reached checkpoint: %f\n", *checkpoint);}
+    printf("Returned eror: %d\n", error);
+  }
 }
