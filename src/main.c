@@ -1,7 +1,6 @@
 #define GLFW_INCLUDE_GLU
 #define STB_IMAGE_IMPLEMENTATION
-//#include "../include/glad/glad/glad.h" 
-#include <glad/glad.h>
+#include "../include/glad/glad/glad.h" 
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -127,19 +126,40 @@ int main(){
 
   int width, height, nrChannels;
   char* pathToTex = "src/textures/container.jpg";
-  int doesFileExist = exists(pathToTex);
-  if(!doesFileExist){ 
+  char* pathToTex2 = "src/textures/awesomeface.png";
+  if(!exists(pathToTex) || !exists(pathToTex2)){ 
     return -1;
   }
   //load first texture
-  unsigned char* data = stbi_load("src/textures/container.jpg", &width, &height, &nrChannels, 0);
+  unsigned char* data = stbi_load(pathToTex, &width, &height, &nrChannels, 0);
   if(data){
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
   }
-  else{
-    printf("Failed to load data into memory\n");
+
+  stbi_image_free(data);
+  
+  unsigned int texture2;
+  glGenTextures(1, &texture2);
+  glBindTexture(GL_TEXTURE_2D, texture2);
+  //filtering options
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //downscaling
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); //upscaling
+  //wrapping
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); 
+
+  stbi_set_flip_vertically_on_load(1);
+  data = stbi_load(pathToTex2, &width, &height, &nrChannels, 0);
+  if(data){
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
   }
+
+  shUse(programId);
+  //set texture units
+  glUniform1i(glGetUniformLocation(programId, "texture1"), 0);
+  glUniform1i(glGetUniformLocation(programId, "texture2"), 1);
 
   stbi_image_free(data);
 
@@ -150,6 +170,8 @@ int main(){
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture2);
 
     shUse(programId);
     glBindVertexArray(VAO);
@@ -205,7 +227,6 @@ int exists(const char* path){
   FILE* f; 
   if((f = fopen(path, "rb"))){
     //file exists
-    printf("file exists\n");
     return 1;
   }
   printf("File: %s doesn't exist\n", path);

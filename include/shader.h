@@ -5,6 +5,24 @@
 #include <string.h>
 #include <stdio.h>
 
+const char* vertexShaderSourcecode = "#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"layout (location = 1) in vec3 aColor;\n"
+"layout (location = 2) in vec2 aTexCoord;\n"
+"out vec2 TexCoord;\n"
+"void main(){\n"
+"gl_Position = vec4(aPos, 1.0f);\n"
+"TexCoord = aTexCoord;\n"
+"}\0";
+const char* fragmentShaderSourcecode = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"in vec2 TexCoord;\n"
+"uniform sampler2D texture1;\n"
+"uniform sampler2D texture2;\n"
+"void main(){\n"
+"FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2);\n" 
+"}\0";
+
 void shCompileShader(const char* vertexShaderPath, const char* fragmentShaderPath, unsigned int* ID){
   //load file
   char* vertexCodeBuffer;
@@ -30,8 +48,9 @@ void shCompileShader(const char* vertexShaderPath, const char* fragmentShaderPat
   fread(fragmentCodeBuffer, 1, fragLength, fFragment);
   fclose(fVertex);
   fclose(fFragment);
-  const char* vertexShaderSourcecode = vertexCodeBuffer;
-  const char* fragmentShaderSourcecode  = fragmentCodeBuffer;
+  //const char* vertexShaderSourcecode = vertexCodeBuffer;
+  //const char* fragmentShaderSourcecode  = fragmentCodeBuffer;
+  
   //compile shaders
   unsigned int vertex, fragment;
   int success;
@@ -55,6 +74,9 @@ void shCompileShader(const char* vertexShaderPath, const char* fragmentShaderPat
   if(!success){
     glGetShaderInfoLog(fragment, 1024, NULL, infoLog);
   }
+
+  printf("Vertex source code:\n%s\n", vertexShaderSourcecode);
+  printf("Fragment source code:\n%s\n", fragmentShaderSourcecode);
 
   //shader program
   *ID = glCreateProgram();
