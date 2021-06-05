@@ -1,15 +1,22 @@
 #define GLFW_INCLUDE_GLU
 #define STB_IMAGE_IMPLEMENTATION
+//glad
 #include "../include/glad/glad/glad.h" 
+//opengl
 #include <GLFW/glfw3.h>
+//dir
+#include <unistd.h>
+//shaders
+#include "../include/shader.h" 
+//textures
+#include "../include/stb_image.h" 
+//math 
+#include <math.h>
+#include <cglm/cglm.h>
+#include <cglm/util.h>
+//std
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include <unistd.h>
-#include "../include/shader.h" 
-#include "../include/stb_image.h" 
-
-#define BUFFER_SIZE 1000
 
 //callbacks
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
@@ -162,6 +169,31 @@ int main(){
   glUniform1i(glGetUniformLocation(programId, "texture2"), 1);
 
   stbi_image_free(data);
+
+  //test out math
+  //vec4 newVec;
+  //vec4 vec = {1.f, 0.f, 0.f, 1.f};
+  //vec3 transVector = {1.f, 1.f, 0.f};
+  //mat4 trans;
+  //glm_mat4_identity(trans);
+  //glm_translate(trans, transVector);
+  //printf("Trans Vec:\nx: %f, y: %f, z: %f\n", *trans[0], *trans[1], *trans[2]);
+  //glm_mat4_mulv(trans, vec, newVec);
+  //printf("New Vec:\nx: %f, y: %f, z: %f\n", newVec[0], newVec[1], newVec[2]);
+
+  //rotate
+  mat4 transformationMatrix;
+  glm_mat4_identity(transformationMatrix);
+  float angle = 45.f;
+  float scalar = 0.5;
+  vec3 zAxis = {0.f, 0.f, 1.f};
+  //convert angle in degree to radian
+  float radianAngle = glm_rad(angle);
+  glm_rotate(transformationMatrix, radianAngle, zAxis);
+  glm_mat4_scale(transformationMatrix, scalar);
+
+  unsigned int transformationLocation = glGetUniformLocation(programId, "transform");
+  glUniformMatrix4fv(transformationLocation, 1, GL_FALSE, *transformationMatrix);
 
   while(!glfwWindowShouldClose(window)){
     //render

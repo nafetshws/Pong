@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 //const char* vertexShaderSourcecodeBak = "#version 330 core\n"
 //"layout (location = 0) in vec3 aPos;\n"
