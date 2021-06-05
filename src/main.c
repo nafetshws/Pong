@@ -170,20 +170,6 @@ int main(){
 
   stbi_image_free(data);
   
-  //rotate
-  //mat4 transformationMatrix;
-  //glm_mat4_identity(transformationMatrix);
-  //float angle = 45.f;
-  //float scalar = 0.5;
-  //vec3 zAxis = {0.f, 0.f, 1.f};
-  ////convert angle in degree to radian
-  //float radianAngle = glm_rad(angle);
-  //glm_rotate(transformationMatrix, radianAngle, zAxis);
-  //glm_mat4_scale(transformationMatrix, scalar);
-
-  //unsigned int transformationLocation = glGetUniformLocation(programId, "transform");
-  //glUniformMatrix4fv(transformationLocation, 1, GL_FALSE, *transformationMatrix);
-
   while(!glfwWindowShouldClose(window)){
     //render
     glClearColor(0.2f, 0.3f, 0.3f, 1.f);
