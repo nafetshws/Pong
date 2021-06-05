@@ -193,7 +193,10 @@ int main(){
     mat4 transformationMatrix; 
     glm_mat4_identity(transformationMatrix);
     vec3 zAxis = {0.f, 0.f, 1.f};
+    vec3 transformVec = {0.5f, -0.5f, 0.0f};
+    glm_translate(transformationMatrix, transformVec);
     glm_rotate(transformationMatrix, (float) glfwGetTime(), zAxis);
+
 
     glUniformMatrix4fv(glGetUniformLocation(programId, "transform"), 1, GL_FALSE, *transformationMatrix);
 
