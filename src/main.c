@@ -24,6 +24,7 @@ void error_callback(int error, const char* description);
 void user_close_callback(GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, int mods);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 //read shader file
 const char* loadShader(const char* path);
 //uitl
@@ -48,6 +49,7 @@ float lastY; //= HEIGHT / 2;
 float yaw = -90.f;
 float pitch = 0.f;
 int firstMouse = 1;
+float fov = 45.f;
 
 //deltaTime
 float deltaTime = 0.f;
@@ -91,11 +93,12 @@ int main(){
   //events
   //input
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  
   glfwSetKeyCallback(window, key_callback);
   glfwSetCursorPosCallback(window, cursor_position_callback);
-
   glfwSetWindowCloseCallback(window, user_close_callback);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 
   float vertices[] = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -275,8 +278,6 @@ int main(){
 
     //projection matrix
     mat4 projectionMatrix;
-    float fov = 45.f;
-    glm_rad(fov);
     glm_perspective(fov, ((float)WIDTH/(float)HEIGHT), 0.1f, 100.f, projectionMatrix);
 
     //send matrices to shader program
@@ -411,6 +412,22 @@ static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, 
     height = 1200;
     glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), xpos, ypos, width, height, GLFW_DONT_CARE);
     }
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
+  float newFOV = fov - (float)yoffset;
+  if(newFOV < 1.f){
+    printf("fov ist 1\n");
+    fov = 1.f;
+  }
+  else if(newFOV > 45.f){
+    fov = 45.f;
+    printf("fov ist 45\n");
+  }
+  else{
+    fov = newFOV;
+    printf("new fov is: %f\n", fov);
+  }
 }
 
 int exists(const char* path){
