@@ -82,14 +82,57 @@ int main(){
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 
-  float vertices[] = {
-      // positions          // colors           // texture coords
-       0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-       0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-      -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-      -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
-  };
+  //float vertices[] = {
+  //    // positions          // colors           // texture coords
+  //     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+  //     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+  //    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+  //    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+  //};
 
+  float vertices[] = {
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+  };
   unsigned int indices[] = {
     0, 1, 3, //first triangle
     1, 2, 3 // second triangle 
@@ -111,14 +154,11 @@ int main(){
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
   glEnableVertexAttribArray(1);
-
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
-  glEnableVertexAttribArray(2);
  
   //textures
   unsigned int texture1;
@@ -169,31 +209,52 @@ int main(){
   glUniform1i(glGetUniformLocation(programId, "texture2"), 1);
 
   stbi_image_free(data);
-  
+
+  //enable depth testing -> discard not visible fragments
+  glEnable(GL_DEPTH_TEST);
+
+
   while(!glfwWindowShouldClose(window)){
     //render
     glClearColor(0.2f, 0.3f, 0.3f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    //rotate
-    mat4 transformationMatrix; 
-    glm_mat4_identity(transformationMatrix);
-    vec3 zAxis = {0.f, 0.f, 1.f};
-    vec3 transformVec = {0.5f, -0.5f, 0.0f};
-    glm_translate(transformationMatrix, transformVec);
-    glm_rotate(transformationMatrix, (float) glfwGetTime(), zAxis);
-
-
-    glUniformMatrix4fv(glGetUniformLocation(programId, "transform"), 1, GL_FALSE, *transformationMatrix);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture1);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture2);
 
+    //model matrix
+    mat4 modelMatrix;
+    vec3 xAxis = {0.8f, 1.f, 0.f};
+    float angle = -55;
+    float angleInRadian = glm_rad(angle);
+    glm_mat4_identity(modelMatrix);
+    glm_rotate(modelMatrix, (float)glfwGetTime() * glm_rad(50.f), xAxis);
+    
+    //view matrix
+    mat4 viewMatrix;
+    vec3 newPos = {0.f, 0.f, -3.f};
+    glm_mat4_identity(viewMatrix);
+    glm_translate(viewMatrix, newPos);
+    
+    //projection matrix
+    mat4 projectionMatrix;
+    float fov = 45.f;
+    glm_rad(fov);
+    glm_perspective(fov, ((float)WIDTH/(float)HEIGHT), 0.1f, 100.f, projectionMatrix);
+
+    //send matrices to shader program
+    glUniformMatrix4fv(glGetUniformLocation(programId, "model"), 1, GL_FALSE, *modelMatrix);
+    glUniformMatrix4fv(glGetUniformLocation(programId, "view"), 1, GL_FALSE, *viewMatrix);
+    glUniformMatrix4fv(glGetUniformLocation(programId, "projection"), 1, GL_FALSE, *projectionMatrix);
+
     shUse(programId);
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    vec3 axis = {0.5f, 1.f, 0.f}; 
+    //rotate -> update model matrix
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

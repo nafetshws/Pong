@@ -3,7 +3,10 @@
 ## How to run:
 ```
 cd Pong
-make
+mkdir build
+cd build
+make ..
+./run
 ```
 
 ## What is this?
