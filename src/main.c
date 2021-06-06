@@ -81,15 +81,6 @@ int main(){
   glfwSetWindowCloseCallback(window, user_close_callback);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-
-  //float vertices[] = {
-  //    // positions          // colors           // texture coords
-  //     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-  //     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-  //    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-  //    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
-  //};
-
   float vertices[] = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
      0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -133,12 +124,20 @@ int main(){
     -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
   };
-  unsigned int indices[] = {
-    0, 1, 3, //first triangle
-    1, 2, 3 // second triangle 
 
+  vec3 cubePositions[] = {
+    { 0.0f,  0.0f,  0.0f},
+    { 2.0f,  5.0f, -15.0f},
+    {-1.5f, -2.2f, -2.5f},
+    {-3.8f, -2.0f, -12.3f},
+    { 2.4f, -0.4f, -3.5f},
+    {-1.7f,  3.0f, -7.5f},
+    { 1.3f, -2.0f, -2.5f},
+    { 1.5f,  2.0f, -2.5f},
+    { 1.5f,  0.2f, -1.5f},
+    {-1.3f,  1.0f, -1.5f}
   };
-  
+
   //load shaders + compile them to shader program
   unsigned int programId;
   shCompileShader(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH, &programId);
@@ -150,8 +149,8 @@ int main(){
   glGenBuffers(1, &EBO);
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)0);
@@ -224,14 +223,6 @@ int main(){
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture2);
 
-    //model matrix
-    mat4 modelMatrix;
-    vec3 xAxis = {0.8f, 1.f, 0.f};
-    float angle = -55;
-    float angleInRadian = glm_rad(angle);
-    glm_mat4_identity(modelMatrix);
-    glm_rotate(modelMatrix, (float)glfwGetTime() * glm_rad(50.f), xAxis);
-    
     //view matrix
     mat4 viewMatrix;
     vec3 newPos = {0.f, 0.f, -3.f};
@@ -245,16 +236,26 @@ int main(){
     glm_perspective(fov, ((float)WIDTH/(float)HEIGHT), 0.1f, 100.f, projectionMatrix);
 
     //send matrices to shader program
-    glUniformMatrix4fv(glGetUniformLocation(programId, "model"), 1, GL_FALSE, *modelMatrix);
     glUniformMatrix4fv(glGetUniformLocation(programId, "view"), 1, GL_FALSE, *viewMatrix);
     glUniformMatrix4fv(glGetUniformLocation(programId, "projection"), 1, GL_FALSE, *projectionMatrix);
 
     shUse(programId);
     glBindVertexArray(VAO);
-    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    vec3 axis = {0.5f, 1.f, 0.f}; 
     //rotate -> update model matrix
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    for(int i = 0; i < 10; i++){
+      
+      //model matrix
+      mat4 modelMatrix;
+      vec3 xAxis = {0.8f, 1.f, 0.f};
+      float angle = 20.f * (i + 1); 
+      glm_mat4_identity(modelMatrix);
+      glm_translate(modelMatrix, cubePositions[i]);
+      glm_rotate(modelMatrix, (float)glfwGetTime() * glm_rad(angle), xAxis);
+
+      //send to shader
+      glUniformMatrix4fv(glGetUniformLocation(programId, "model"), 1, GL_FALSE, *modelMatrix);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();
