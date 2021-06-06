@@ -363,15 +363,21 @@ static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, 
   int lastKey;
   const float cameraSpeed = 10.f * deltaTime; 
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
-    //needs a remake
     glfwSetWindowShouldClose(window, GLFW_TRUE);
   }
   if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)){
     //needs a remake
-    cameraPos[2] += cameraSpeed * cameraFront[2];
+    vec3 scaled;
+    glm_vec3_scale(cameraFront, cameraSpeed, scaled);
+    glm_vec3_add(cameraPos, scaled, cameraPos);
+    //cameraPos[2] += cameraSpeed * cameraFront[2];
   }
   if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    cameraPos[2] -= cameraSpeed * cameraFront[2];
+    //needs a remake
+    vec3 scaled;
+    glm_vec3_scale(cameraFront, cameraSpeed, scaled);
+    glm_vec3_sub(cameraPos, scaled, cameraPos);
+    //cameraPos[2] -= cameraSpeed * cameraFront[2];
   }
   if(key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)){
     //pressed A
