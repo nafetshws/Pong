@@ -263,22 +263,13 @@ int main(){
 
     //view matrix
     mat4 viewMatrix;
-    float radius = 10.f;
-    float camX = sin(glfwGetTime()) * radius;
-    float camZ = cos(glfwGetTime()) * radius;
-    float camY = 1.f;//sin(glfwGetTime() + 0.5) * radius;
-    vec3 eye ={0.f, 0.f, 3.f};
-    vec3 tar = {0.f, 0.f, 0.f};
-    vec3 up = {0.f, 1.f, 0.f};
     vec3 targetDirection;
     glm_vec3_add(cameraPos, cameraFront, targetDirection);
-    //glm_lookat(cameraPos, targetDirection , cameraUp, viewMatrix);
-    //glm_lookat(eye, tar , up, viewMatrix);
     glm_lookat(cameraPos, targetDirection , cameraUp, viewMatrix);
 
     //projection matrix
     mat4 projectionMatrix;
-    glm_perspective(fov, ((float)WIDTH/(float)HEIGHT), 0.1f, 100.f, projectionMatrix);
+    glm_perspective(glm_rad(fov), ((float)WIDTH/(float)HEIGHT), 0.1f, 100.f, projectionMatrix);
 
     //send matrices to shader program
     glUniformMatrix4fv(glGetUniformLocation(programId, "view"), 1, GL_FALSE, *viewMatrix);
@@ -417,16 +408,13 @@ static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
   float newFOV = fov - (float)yoffset;
   if(newFOV < 1.f){
-    printf("fov ist 1\n");
     fov = 1.f;
   }
-  else if(newFOV > 45.f){
-    fov = 45.f;
-    printf("fov ist 45\n");
+  else if(newFOV > 90.f){
+    fov = 60.f;
   }
   else{
     fov = newFOV;
-    printf("new fov is: %f\n", fov);
   }
 }
 
