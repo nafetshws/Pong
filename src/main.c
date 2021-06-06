@@ -38,6 +38,15 @@ const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
 const char* title = "Pong"; 
 
+//camera
+vec3 cameraPos = {0.f, 0.f, 3.f};
+vec3 cameraFront = {0.f, 0.f, -1.f};
+vec3 cameraUp = {0.f, 1.f, 0.f};
+
+//deltaTime
+float deltaTime = 0.f;
+float lastFrame = 0.f;
+
 float cp = 0.f;
 
 int main(){  
@@ -213,24 +222,27 @@ int main(){
   glEnable(GL_DEPTH_TEST);
 
   //setting up camera system
- // vec3 cameraPos = {0.f, 0.f, 0.3f};
- // //camera direction
- // vec3 cameraTarget = {0.f, 0.f, 0.f};
- // vec3 cameraDirection;
- // glm_vec3_sub(cameraPos, cameraTarget, cameraDirection);
- // glm_normalize(cameraDirection);
- // //right axis
- // vec3 fakeUp = {0.f, 1.f, 0.f};
- // vec3 rightAxis, cameraRight;
- // glm_vec3_cross(rightAxis, fakeUp, cameraRight);
- // glm_vec3_normalize(cameraRight);
- // //up axis
- // vec3 cameraUp;
- // glm_cross(cameraDirection, cameraRight, cameraUp);
+  //camera direction
+  vec3 cameraTarget = {0.f, 0.f, 0.f};
+  vec3 cameraDirection;
+  glm_vec3_sub(cameraPos, cameraTarget, cameraDirection);
+  glm_normalize(cameraDirection);
+  //right axis
+  vec3 fakeUp = {0.f, 1.f, 0.f};
+  vec3 rightAxis, cameraRight;
+  glm_vec3_cross(rightAxis, fakeUp, cameraRight);
+  glm_vec3_normalize(cameraRight);
+  //up axis
+  vec3 cameraUpAxis;
+  glm_cross(cameraDirection, cameraRight, cameraUpAxis);
 
 
   while(!glfwWindowShouldClose(window)){
     //render
+    float currentFrame = glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
     glClearColor(0.2f, 0.3f, 0.3f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -244,11 +256,15 @@ int main(){
     float radius = 10.f;
     float camX = sin(glfwGetTime()) * radius;
     float camZ = cos(glfwGetTime()) * radius;
-    float camY = sin(glfwGetTime() + 0.5) * radius;
-    vec3 eye ={camX, camY, camZ};
+    float camY = 1.f;//sin(glfwGetTime() + 0.5) * radius;
+    vec3 eye ={0.f, 0.f, 3.f};
     vec3 tar = {0.f, 0.f, 0.f};
     vec3 up = {0.f, 1.f, 0.f};
-    glm_lookat(eye, tar, up, viewMatrix);
+    vec3 targetDirection;
+    glm_vec3_add(cameraPos, cameraFront, targetDirection);
+    //glm_lookat(cameraPos, targetDirection , cameraUp, viewMatrix);
+    //glm_lookat(eye, tar , up, viewMatrix);
+    glm_lookat(cameraPos, targetDirection , cameraUp, viewMatrix);
 
     //projection matrix
     mat4 projectionMatrix;
@@ -271,7 +287,7 @@ int main(){
       float angle = 20.f * (i + 1); 
       glm_mat4_identity(modelMatrix);
       glm_translate(modelMatrix, cubePositions[i]);
-      glm_rotate(modelMatrix, (float)glfwGetTime() * glm_rad(angle), xAxis);
+      //glm_rotate(modelMatrix, (float)glfwGetTime() * glm_rad(angle), xAxis);
 
       //send to shader
       glUniformMatrix4fv(glGetUniformLocation(programId, "model"), 1, GL_FALSE, *modelMatrix);
@@ -309,12 +325,35 @@ static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, 
   double time = glfwGetTime();
   double lastTime;
   int lastKey;
+  const float cameraSpeed = 10.f * deltaTime; 
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
     glfwSetWindowShouldClose(window, GLFW_TRUE);
   }
-  else if(key == 70 && action == GLFW_PRESS){
+  if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+    cameraPos[2] += cameraSpeed * cameraFront[2];
+  }
+  if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+    cameraPos[2] -= cameraSpeed * cameraFront[2];
+  }
+  if(key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+    //pressed A
+    vec3 subtrahend;
+    glm_vec3_cross(cameraFront, cameraUp, subtrahend);
+    glm_vec3_normalize(subtrahend);
+    glm_vec3_scale(subtrahend, cameraSpeed, subtrahend);
+    glm_vec3_sub(cameraPos, subtrahend, cameraPos);
+  }
+  if(key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+    //pressed D
+    vec3 add;
+    glm_vec3_cross(cameraFront, cameraUp, add);
+    glm_vec3_normalize(add);
+    glm_vec3_scale(add, cameraSpeed, add);
+    glm_vec3_add(cameraPos, add, cameraPos);
+  }
+  if(key == 70 && action == GLFW_PRESS){
     //f
-    printf("Setting window fullscreen");
+    printf("Setting window fullscreen\n");
     int xpos, ypos, width, height;
     xpos = -1;
     ypos = 1;
