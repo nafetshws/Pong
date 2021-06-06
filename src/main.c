@@ -42,6 +42,12 @@ const char* title = "Pong";
 vec3 cameraPos = {0.f, 0.f, 3.f};
 vec3 cameraFront = {0.f, 0.f, -1.f};
 vec3 cameraUp = {0.f, 1.f, 0.f};
+//yaw pitch -> mouse movement
+float lastX; //= WIDTH / 2;
+float lastY; //= HEIGHT / 2;
+float yaw = -90.f;
+float pitch = 0.f;
+int firstMouse = 1;
 
 //deltaTime
 float deltaTime = 0.f;
@@ -65,7 +71,7 @@ int main(){
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   //create window
   GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, title, NULL, NULL);
-
+  //disable curosr
 
   if(!window){
     printf("Failed to create window :(\n");
@@ -84,6 +90,7 @@ int main(){
 
   //events
   //input
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetKeyCallback(window, key_callback);
   glfwSetCursorPosCallback(window, cursor_position_callback);
 
@@ -305,7 +312,44 @@ int main(){
 
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
-  //printf("Mouse was moved: x: %f y: %f\n", xpos, ypos);
+
+  ypos = -ypos;
+  //printf("Mouse position:\nx: %fy: %f\n", xpos, ypos);
+  if(firstMouse){
+    lastX = xpos;
+    lastY = ypos;
+    firstMouse = 0;
+  }
+
+  float xoffset = xpos - lastX;
+  float yoffset = ypos - lastY;
+  lastX = xpos; 
+  lastY = ypos; 
+
+  const float sensitivity = 0.01f;
+  xoffset *= sensitivity;
+  yoffset *= sensitivity;
+
+  yaw += xoffset;
+  pitch += yoffset;
+
+  if(pitch > 89.f){
+    pitch = 89.f;
+  }
+  else if(pitch < -89.f){
+    pitch = -89.f;
+  }
+
+  vec3 direction = {0.f, 0.f, 0.f};
+  direction[0] = cos(glm_rad(yaw)) * cos(glm_rad(pitch)); //x is also effect by cos(pitch)
+  direction[1] = sin(glm_rad(pitch));
+  direction[2] = sin(glm_rad(yaw)) * cos(glm_rad(pitch)); //x is also effect by cos(pitch)
+  
+  glm_vec3_normalize(direction);
+
+  //replace cameraFront by direction
+  glm_vec3_copy(direction, cameraFront);
+
 }
 
 void error_callback(int error, const char* description){
@@ -327,9 +371,11 @@ static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, 
   int lastKey;
   const float cameraSpeed = 10.f * deltaTime; 
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
+    //needs a remake
     glfwSetWindowShouldClose(window, GLFW_TRUE);
   }
   if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+    //needs a remake
     cameraPos[2] += cameraSpeed * cameraFront[2];
   }
   if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)){
@@ -338,17 +384,21 @@ static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, 
   if(key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)){
     //pressed A
     vec3 subtrahend;
+    //build right axis from up and z-axis
     glm_vec3_cross(cameraFront, cameraUp, subtrahend);
     glm_vec3_normalize(subtrahend);
     glm_vec3_scale(subtrahend, cameraSpeed, subtrahend);
+    //move on z-axis (right-axis)
     glm_vec3_sub(cameraPos, subtrahend, cameraPos);
   }
   if(key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)){
     //pressed D
     vec3 add;
+    //build right axis from up and z-axis
     glm_vec3_cross(cameraFront, cameraUp, add);
     glm_vec3_normalize(add);
     glm_vec3_scale(add, cameraSpeed, add);
+    //move on z-axis (right-axis)
     glm_vec3_add(cameraPos, add, cameraPos);
   }
   if(key == 70 && action == GLFW_PRESS){

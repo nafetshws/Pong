@@ -16,3 +16,5 @@ This is a simple pong game written in c. You are able to play single player, aga
 - GLFW
 - glad
  
+## TODO
+- fix fowards and backwards movement
