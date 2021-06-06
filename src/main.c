@@ -212,6 +212,22 @@ int main(){
   //enable depth testing -> discard not visible fragments
   glEnable(GL_DEPTH_TEST);
 
+  //setting up camera system
+ // vec3 cameraPos = {0.f, 0.f, 0.3f};
+ // //camera direction
+ // vec3 cameraTarget = {0.f, 0.f, 0.f};
+ // vec3 cameraDirection;
+ // glm_vec3_sub(cameraPos, cameraTarget, cameraDirection);
+ // glm_normalize(cameraDirection);
+ // //right axis
+ // vec3 fakeUp = {0.f, 1.f, 0.f};
+ // vec3 rightAxis, cameraRight;
+ // glm_vec3_cross(rightAxis, fakeUp, cameraRight);
+ // glm_vec3_normalize(cameraRight);
+ // //up axis
+ // vec3 cameraUp;
+ // glm_cross(cameraDirection, cameraRight, cameraUp);
+
 
   while(!glfwWindowShouldClose(window)){
     //render
@@ -225,10 +241,15 @@ int main(){
 
     //view matrix
     mat4 viewMatrix;
-    vec3 newPos = {0.f, 0.f, -3.f};
-    glm_mat4_identity(viewMatrix);
-    glm_translate(viewMatrix, newPos);
-    
+    float radius = 10.f;
+    float camX = sin(glfwGetTime()) * radius;
+    float camZ = cos(glfwGetTime()) * radius;
+    float camY = sin(glfwGetTime() + 0.5) * radius;
+    vec3 eye ={camX, camY, camZ};
+    vec3 tar = {0.f, 0.f, 0.f};
+    vec3 up = {0.f, 1.f, 0.f};
+    glm_lookat(eye, tar, up, viewMatrix);
+
     //projection matrix
     mat4 projectionMatrix;
     float fov = 45.f;
