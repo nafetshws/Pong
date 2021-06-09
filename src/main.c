@@ -6,8 +6,9 @@
 #include <GLFW/glfw3.h>
 //dir
 #include <unistd.h>
-//shaders
+//custom classes
 #include "../include/shader.h" 
+#include "../include/camera.h" 
 //textures
 #include "../include/stb_image.h" 
 //math 
@@ -43,6 +44,7 @@ const char* title = "Pong";
 vec3 cameraPos = {0.f, 0.f, 3.f};
 vec3 cameraFront = {0.f, 0.f, -1.f};
 vec3 cameraUp = {0.f, 1.f, 0.f};
+struct Camera cam;
 //yaw pitch -> mouse movement
 float lastX; //= WIDTH / 2;
 float lastY; //= HEIGHT / 2;
@@ -231,6 +233,12 @@ int main(){
   //enable depth testing -> discard not visible fragments
   glEnable(GL_DEPTH_TEST);
 
+  //camera class
+  vec3 front = {0.f, 0.f, -1.f};
+  vec3 up = {0.f, 1.f, 0.f};
+  vec3 pos = {0.f, 0.f, 3.f};
+  cam = createCamera(front, pos, up);
+
   //setting up camera system
   //camera direction
   vec3 cameraTarget = {0.f, 0.f, 0.f};
@@ -286,7 +294,7 @@ int main(){
       float angle = 20.f * (i + 1); 
       glm_mat4_identity(modelMatrix);
       glm_translate(modelMatrix, cubePositions[i]);
-      //glm_rotate(modelMatrix, (float)glfwGetTime() * glm_rad(angle), xAxis);
+      glm_rotate(modelMatrix, (float)glfwGetTime() * glm_rad(angle), xAxis);
 
       //send to shader
       glUniformMatrix4fv(glGetUniformLocation(programId, "model"), 1, GL_FALSE, *modelMatrix);
@@ -366,18 +374,14 @@ static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, 
     glfwSetWindowShouldClose(window, GLFW_TRUE);
   }
   if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    //needs a remake
     vec3 scaled;
     glm_vec3_scale(cameraFront, cameraSpeed, scaled);
     glm_vec3_add(cameraPos, scaled, cameraPos);
-    //cameraPos[2] += cameraSpeed * cameraFront[2];
   }
   if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    //needs a remake
     vec3 scaled;
     glm_vec3_scale(cameraFront, cameraSpeed, scaled);
     glm_vec3_sub(cameraPos, scaled, cameraPos);
-    //cameraPos[2] -= cameraSpeed * cameraFront[2];
   }
   if(key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)){
     //pressed A
