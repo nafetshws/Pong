@@ -271,9 +271,7 @@ int main(){
 
     //view matrix
     mat4 viewMatrix;
-    vec3 targetDirection;
-    glm_vec3_add(cameraPos, cameraFront, targetDirection);
-    glm_lookat(cameraPos, targetDirection , cameraUp, viewMatrix);
+    getViewMatrix(cam, &viewMatrix);
 
     //projection matrix
     mat4 projectionMatrix;
@@ -312,44 +310,7 @@ int main(){
 
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
-
-  ypos = -ypos;
-  //printf("Mouse position:\nx: %fy: %f\n", xpos, ypos);
-  if(firstMouse){
-    lastX = xpos;
-    lastY = ypos;
-    firstMouse = 0;
-  }
-
-  float xoffset = xpos - lastX;
-  float yoffset = ypos - lastY;
-  lastX = xpos; 
-  lastY = ypos; 
-
-  const float sensitivity = 0.01f;
-  xoffset *= sensitivity;
-  yoffset *= sensitivity;
-
-  yaw += xoffset;
-  pitch += yoffset;
-
-  if(pitch > 89.f){
-    pitch = 89.f;
-  }
-  else if(pitch < -89.f){
-    pitch = -89.f;
-  }
-
-  vec3 direction = {0.f, 0.f, 0.f};
-  direction[0] = cos(glm_rad(yaw)) * cos(glm_rad(pitch)); //x is also effect by cos(pitch)
-  direction[1] = sin(glm_rad(pitch));
-  direction[2] = sin(glm_rad(yaw)) * cos(glm_rad(pitch)); //x is also effect by cos(pitch)
-  
-  glm_vec3_normalize(direction);
-
-  //replace cameraFront by direction
-  glm_vec3_copy(direction, cameraFront);
-
+  handle_cursor_position(cam, (float)xpos, (float)ypos);
 }
 
 void error_callback(int error, const char* description){
@@ -366,66 +327,14 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 
 
 static void key_callback(GLFWwindow* window, int key, int scancdoe, int action, int mods){
-  double time = glfwGetTime();
-  double lastTime;
-  int lastKey;
-  const float cameraSpeed = 10.f * deltaTime; 
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
-    glfwSetWindowShouldClose(window, GLFW_TRUE);
+    glfwSetWindowShouldClose(window, 1);
   }
-  if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    vec3 scaled;
-    glm_vec3_scale(cameraFront, cameraSpeed, scaled);
-    glm_vec3_add(cameraPos, scaled, cameraPos);
-  }
-  if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    vec3 scaled;
-    glm_vec3_scale(cameraFront, cameraSpeed, scaled);
-    glm_vec3_sub(cameraPos, scaled, cameraPos);
-  }
-  if(key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    //pressed A
-    vec3 subtrahend;
-    //build right axis from up and z-axis
-    glm_vec3_cross(cameraFront, cameraUp, subtrahend);
-    glm_vec3_normalize(subtrahend);
-    glm_vec3_scale(subtrahend, cameraSpeed, subtrahend);
-    //move on z-axis (right-axis)
-    glm_vec3_sub(cameraPos, subtrahend, cameraPos);
-  }
-  if(key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    //pressed D
-    vec3 add;
-    //build right axis from up and z-axis
-    glm_vec3_cross(cameraFront, cameraUp, add);
-    glm_vec3_normalize(add);
-    glm_vec3_scale(add, cameraSpeed, add);
-    //move on z-axis (right-axis)
-    glm_vec3_add(cameraPos, add, cameraPos);
-  }
-  if(key == 70 && action == GLFW_PRESS){
-    //f
-    printf("Setting window fullscreen\n");
-    int xpos, ypos, width, height;
-    xpos = -1;
-    ypos = 1;
-    width = 1920;
-    height = 1200;
-    glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), xpos, ypos, width, height, GLFW_DONT_CARE);
-    }
+  handle_movement(cam, key, action);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
-  float newFOV = fov - (float)yoffset;
-  if(newFOV < 1.f){
-    fov = 1.f;
-  }
-  else if(newFOV > 90.f){
-    fov = 60.f;
-  }
-  else{
-    fov = newFOV;
-  }
+  handle_zoom(cam, (float)xoffset, (float)yoffset);
 }
 
 int exists(const char* path){
