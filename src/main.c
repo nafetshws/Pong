@@ -1,18 +1,21 @@
 #include <stdio.h>
 #include "../include/glad/glad/glad.h" 
 #include <GLFW/glfw3.h>
+#include <cglm/cglm.h>
+#include <math.h>
 
 //consts
-int WIDTH = 800;
-int HEIGHT = 800;
+int WIDTH = 1920;
+int HEIGHT = 1080;
 
 const char* TITLE = "PONG";
 
 //shaders
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
+"uniform mat4 transform;\n"
 "void main(){\n"
-"gl_Position = vec4(aPos, 1.0f);\n"
+"gl_Position = transform * vec4(aPos, 1.0f);\n"
 "}\0";
 const char* fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
@@ -21,12 +24,12 @@ const char* fragmentShaderSource = "#version 330 core\n"
 "}\0";
 
 const float vertices[] = {
-  0.5f, 0.5f, 0.f, // right up
-  -0.5f, 0.5f, 0.f, //left up
-  -0.5f, -0.5f, 0.f, // left down
-  -0.5f, -0.5f, 0.f, // left down
-  0.5f, -0.5f, 0.f, //right down
-  0.5f, 0.5f, 0.f, // right up
+  -0.95f, 0.2f, 0.f, // right up
+  -1.f, 0.2f, 0.f, //left up
+  -1.f, 0.f, 0.f, // left down
+  -1.f, 0.f, 0.f, // left down
+  -0.95, 0.f, 0.f, //right down
+  -0.95, 0.2f, 0.f, // right up
 };
 
 //set all callback functions
@@ -123,11 +126,22 @@ int main(){
 
   while(!glfwWindowShouldClose(window)){
     //render
-    glClearColor(0.2f, 02.f, 0.2f, 1.f);
+    double time = glfwGetTime();
+    //glClearColor(0.2f, 02.f, 0.2f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    //change vertex positions
+    mat4 transformationMatrix;
+    float yValue = sin(time);
+    vec3 newCoord = {0.f, yValue, 0.f};
+    glm_mat4_identity(transformationMatrix);
+    glm_translate(transformationMatrix, newCoord);
+    unsigned int transformLocation = glGetUniformLocation(program, "transform");
+    glUniformMatrix4fv(transformLocation, 1, GL_FALSE, *transformationMatrix);
 
     glUseProgram(program);
     glBindVertexArray(VAO);
+
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glfwSwapBuffers(window);
