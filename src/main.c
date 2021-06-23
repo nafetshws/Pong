@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../include/glad/glad/glad.h" 
 #include <GLFW/glfw3.h>
 
 //consts
@@ -6,6 +7,27 @@ int WIDTH = 800;
 int HEIGHT = 800;
 
 const char* TITLE = "PONG";
+
+//shaders
+const char* vertexShaderSource = "#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"void main(){\n"
+"gl_Position = vec4(aPos, 1.0f);\n"
+"}\0";
+const char* fragmentShaderSource = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main(){\n"
+"FragColor = vec4(1.f, 1.f, 1.f, 1.f);\n"
+"}\0";
+
+const float vertices[] = {
+  0.5f, 0.5f, 0.f, // right up
+  -0.5f, 0.5f, 0.f, //left up
+  -0.5f, -0.5f, 0.f, // left down
+  -0.5f, -0.5f, 0.f, // left down
+  0.5f, -0.5f, 0.f, //right down
+  0.5f, 0.5f, 0.f, // right up
+};
 
 //set all callback functions
 void error_callback(int error, const char* description);
@@ -32,16 +54,81 @@ int main(){
 
   glfwMakeContextCurrent(window);
 
+  //init glad
+  int result = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+  if(!result){
+    printf("Failed to init glad\n");
+    return -1;
+  }
+
   glfwSetKeyCallback(window, key_callback);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetErrorCallback(error_callback);
 
-  //load glad
+  //compiler shaders
+  unsigned int vertexShader, fragmentShader;
+  int success;
+  vertexShader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+  glCompileShader(vertexShader);
+  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+  if(!success){
+    int length = 0; 
+    char message[1024];
+    glGetShaderInfoLog(vertexShader, 1024, &length, message);
+  }
+  fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+  glCompileShader(fragmentShader);
+  glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+  if(!success){
+    int length = 0; 
+    char message[1024];
+    glGetShaderInfoLog(fragmentShader, 1024, &length, message);
+  }
+
+  //create program
+  unsigned int program;
+  program = glCreateProgram();
+
+  glAttachShader(program, vertexShader);
+  glAttachShader(program, fragmentShader);;
+  glLinkProgram(program);
+
+  glGetProgramiv(program, GL_LINK_STATUS, &success);
+  if(!success){
+    char message[1024];
+    int length = 0;
+    glGetProgramInfoLog(program, 1024, &length, message);
+  }
+
+  //delete shaders
+  glDeleteShader(vertexShader);
+  glDeleteShader(fragmentShader);
+
+  
+  unsigned int VBO, VAO;
+  glGenVertexArrays(1, &VAO);
+  glBindVertexArray(VAO);
+  glGenBuffers(1, &VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices),vertices, GL_STATIC_DRAW);
+  //specify vertex data
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), 0);
+  glEnableVertexAttribArray(0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
+
 
   while(!glfwWindowShouldClose(window)){
     //render
     glClearColor(0.2f, 02.f, 0.2f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(program);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
