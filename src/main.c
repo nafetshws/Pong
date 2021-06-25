@@ -8,7 +8,12 @@
 int WIDTH = 1920;
 int HEIGHT = 1080;
 
+float yValue = 0.5;
+
 const char* TITLE = "PONG";
+
+float tileHeight = 0.2f;
+float tileWidth = 0.05f;
 
 //shaders
 const char* vertexShaderSource = "#version 330 core\n"
@@ -132,7 +137,6 @@ int main(){
 
     //change vertex positions
     mat4 transformationMatrix;
-    float yValue = sin(time);
     vec3 newCoord = {0.f, yValue, 0.f};
     glm_mat4_identity(transformationMatrix);
     glm_translate(transformationMatrix, newCoord);
@@ -160,6 +164,22 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
     glfwSetWindowShouldClose(window, 1);
+  }
+  if(key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+    if(yValue + tileHeight < 1.f){
+      yValue += 0.05f;
+    }
+    else{
+      printf("Hit top\n");
+    }
+  }
+  if(key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+    if(yValue > -1.f){
+      yValue -= 0.05f;
+    }
+    else{
+      printf("Hit bottom\n");
+    }
   }
 }
 
