@@ -1,12 +1,18 @@
 #include <stdio.h>
+#include "helperFunctions.h"
 #include "../include/glad/glad/glad.h" 
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 #include <math.h>
+#include "../shaders/playerShader.h"
 
 //consts
 int WIDTH = 1920;
 int HEIGHT = 1080;
+
+const float movementSpeed = 5.f;
+float deltatime = 0.f;
+float lastFrame = 0.f;
 
 float yValue = 0.5;
 
@@ -16,18 +22,6 @@ float tileHeight = 0.2f;
 float tileWidth = 0.05f;
 
 //shaders
-const char* vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"uniform mat4 transform;\n"
-"void main(){\n"
-"gl_Position = transform * vec4(aPos, 1.0f);\n"
-"}\0";
-const char* fragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main(){\n"
-"FragColor = vec4(1.f, 1.f, 1.f, 1.f);\n"
-"}\0";
-
 const float vertices[] = {
   -0.95f, 0.2f, 0.f, // right up
   -1.f, 0.2f, 0.f, //left up
@@ -35,6 +29,15 @@ const float vertices[] = {
   -1.f, 0.f, 0.f, // left down
   -0.95, 0.f, 0.f, //right down
   -0.95, 0.2f, 0.f, // right up
+};
+
+const float enemyVertices[] = {
+  1.f, 0.2f, 0.f, // right up
+  0.95f, 0.2f, 0.f, //left up
+  1.f, 0.f, 0.f, // left down
+  1.f, 0.f, 0.f, // left down
+  0.95f, 0.f, 0.f, //right down
+  0.95f, 0.2f, 0.f, // right up
 };
 
 //set all callback functions
@@ -74,33 +77,35 @@ int main(){
   glfwSetErrorCallback(error_callback);
 
   //compiler shaders
-  unsigned int vertexShader, fragmentShader;
-  int success;
-  vertexShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-  glCompileShader(vertexShader);
-  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-  if(!success){
-    int length = 0; 
-    char message[1024];
-    glGetShaderInfoLog(vertexShader, 1024, &length, message);
-  }
-  fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-  glCompileShader(fragmentShader);
-  glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-  if(!success){
-    int length = 0; 
-    char message[1024];
-    glGetShaderInfoLog(fragmentShader, 1024, &length, message);
-  }
+  unsigned int playerVertexShader, playerFragmentShader;
+  createShader(&playerVertexShader, playerVertexShaderSource, &playerFragmentShader, playerFragmentShaderSource);
+  //int success;
+  //vertexShader = glCreateShader(GL_VERTEX_SHADER);
+  //glShaderSource(vertexShader, 1, &playerVertexShaderSource, NULL);
+  //glCompileShader(vertexShader);
+  //glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+  //if(!success){
+  //  int length = 0; 
+  //  char message[1024];
+  //  glGetShaderInfoLog(vertexShader, 1024, &length, message);
+  //}
+  //fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+  //glShaderSource(fragmentShader, 1, &playerFragmentShaderSource, NULL);
+  //glCompileShader(fragmentShader);
+  //glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+  //if(!success){
+  //  int length = 0; 
+  //  char message[1024];
+  //  glGetShaderInfoLog(fragmentShader, 1024, &length, message);
+  //}
 
   //create program
+  int success;
   unsigned int program;
   program = glCreateProgram();
 
-  glAttachShader(program, vertexShader);
-  glAttachShader(program, fragmentShader);;
+  glAttachShader(program, playerVertexShader);
+  glAttachShader(program, playerFragmentShader);;
   glLinkProgram(program);
 
   glGetProgramiv(program, GL_LINK_STATUS, &success);
@@ -111,8 +116,8 @@ int main(){
   }
 
   //delete shaders
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentShader);
+  glDeleteShader(playerVertexShader);
+  glDeleteShader(playerFragmentShader);
 
   
   unsigned int VBO, VAO;
@@ -130,6 +135,9 @@ int main(){
 
 
   while(!glfwWindowShouldClose(window)){
+    float currentFrame = (float)glfwGetTime();
+    deltatime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
     //render
     double time = glfwGetTime();
     //glClearColor(0.2f, 02.f, 0.2f, 1.f);
@@ -165,20 +173,20 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
     glfwSetWindowShouldClose(window, 1);
   }
+  if(key == GLFW_KEY_A){
+    printf("Pressed a\n");
+  }
+  if(key == GLFW_KEY_D){
+    printf("Pressed d\n");
+  }
   if(key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)){
     if(yValue + tileHeight < 1.f){
-      yValue += 0.05f;
-    }
-    else{
-      printf("Hit top\n");
+      yValue += movementSpeed * deltatime;
     }
   }
   if(key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)){
     if(yValue > -1.f){
-      yValue -= 0.05f;
-    }
-    else{
-      printf("Hit bottom\n");
+      yValue -= movementSpeed * deltatime;
     }
   }
 }
