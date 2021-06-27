@@ -5,7 +5,7 @@
 #include <cglm/cglm.h>
 #include <math.h>
 #include "../shaders/playerShader.h"
-//#include "../shaders/enemyShader.h"
+#include "../shaders/enemyShader.h"
 
 //consts
 int WIDTH = 1920;
@@ -33,8 +33,6 @@ const float vertices[] = {
   -0.95, 0.2f, 0.f,     0.95f, 0.2f, 0.f, // right up
 };
 
-//const float enemyVertices[] = {
-//};
 
 //set all callback functions
 void error_callback(int error, const char* description);
@@ -74,24 +72,25 @@ int main(){
 
   //compiler shaders
   unsigned int playerVertexShader, playerFragmentShader;
+  unsigned int enemyVertexShader, enemyFragmentShader;
   createShader(&playerVertexShader, playerVertexShaderSource, &playerFragmentShader, playerFragmentShaderSource);
-  //unsigned int enemyVertexShader, enemyFragmentShader;
-  //createShader(&enemyVertexShader, enemyVertexShaderSource, &enemyFragmentShader, enemyFragmentShaderSource);
+  createShader(&enemyVertexShader, enemyVertexShaderSource, &enemyFragmentShader, enemyFragmentShaderSource);
 
   //create program
   int success;
   unsigned int playerProgram, enemyProgram;
   playerProgram = glCreateProgram();
-  //enemyProgram = glCreateProgram();
+  enemyProgram = glCreateProgram();
 
   //player
   glAttachShader(playerProgram, playerVertexShader);
   glAttachShader(playerProgram, playerFragmentShader);;
   //enemy
-  //glAttachShader(enemyProgram, enemyVertexShader);
-  //glAttachShader(enemyProgram, enemyFragmentShader);
+  glAttachShader(enemyProgram, enemyVertexShader);
+  glAttachShader(enemyProgram, enemyFragmentShader);
+  //link
   glLinkProgram(playerProgram);
-  //glLinkProgram(enemyProgram);
+  glLinkProgram(enemyProgram);
 
   glGetProgramiv(playerProgram, GL_LINK_STATUS, &success);
   if(!success){
@@ -101,23 +100,23 @@ int main(){
     printf("Linking error: %s\n", message);
   }
 
-  //glGetProgramiv(enemyProgram, GL_LINK_STATUS, &success);
-  //if(!success){
-  //  char message[1024];
-  //  int length = 0;
-  //  glGetProgramInfoLog(enemyProgram, 1024, &length, message);
-  //  printf("Linking error: %s\n", message);
-  //}
+  glGetProgramiv(enemyProgram, GL_LINK_STATUS, &success);
+  if(!success){
+    char message[1024];
+    int length = 0;
+    glGetProgramInfoLog(enemyProgram, 1024, &length, message);
+    printf("Linking error: %s\n", message);
+  }
 
   //delete shaders
   glDeleteShader(playerVertexShader);
   glDeleteShader(playerFragmentShader);
-  //glDeleteShader(enemyVertexShader);
-  //glDeleteShader(enemyFragmentShader);
+  glDeleteShader(enemyVertexShader);
+  glDeleteShader(enemyFragmentShader);
 
   unsigned int playerVBO, playerVAO;
   unsigned int enemyVBO, enemyVAO;
-  //unsigned int playerVBO, enemyVBO, playerVAO, enemyVAO;
+
   glGenVertexArrays(1, &playerVAO);
   glGenVertexArrays(1, &enemyVAO);
 
@@ -129,24 +128,13 @@ int main(){
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
-  //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
-  //glEnableVertexAttribArray(1);
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
-
   glBindVertexArray(enemyVAO);
   glGenBuffers(1, &enemyVBO);
   glBindBuffer(GL_ARRAY_BUFFER, enemyVBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STREAM_DRAW);
-  //specify vertex data -> enemy
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
-  glEnableVertexAttribArray(1);
 
-  //glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-  //glBindVertexArray(0);
-
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
+  glEnableVertexAttribArray(0);
 
   while(!glfwWindowShouldClose(window)){
     float currentFrame = (float)glfwGetTime();
@@ -163,9 +151,7 @@ int main(){
     glm_mat4_identity(transformationMatrix);
     glm_translate(transformationMatrix, newCoord);
     unsigned int transformLocation = glGetUniformLocation(playerProgram, "playerTransform");
-    unsigned int wasEnemyMovedLocation = glGetUniformLocation(playerProgram, "wasEnemyMoved");
     glUniformMatrix4fv(transformLocation, 1, GL_FALSE, *transformationMatrix);
-    glUniform1i(wasEnemyMovedLocation, 0);
 
     glBindVertexArray(playerVAO);
     glUseProgram(playerProgram);
@@ -174,6 +160,7 @@ int main(){
     //enemy player
 
     glBindVertexArray(enemyVAO);
+    glUseProgram(enemyProgram);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glfwSwapBuffers(window);
