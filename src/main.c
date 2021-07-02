@@ -123,7 +123,7 @@ int main(){
   glBindVertexArray(playerVAO);
   glGenBuffers(1, &playerVBO);
   glBindBuffer(GL_ARRAY_BUFFER, playerVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices),vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices),vertices, GL_STREAM_DRAW);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
@@ -150,18 +150,24 @@ int main(){
     vec3 newCoord = {0.f, yValue, 0.f};
     glm_mat4_identity(transformationMatrix);
     glm_translate(transformationMatrix, newCoord);
-    unsigned int transformLocation = glGetUniformLocation(playerProgram, "playerTransform");
-    glUniformMatrix4fv(transformLocation, 1, GL_FALSE, *transformationMatrix);
+    unsigned int playerTransformLocation = glGetUniformLocation(playerProgram, "playerTransform");
+    unsigned int enemyTransformLocation = glGetUniformLocation(enemyProgram, "enemyTransform");
+    glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *transformationMatrix);
+    glUniformMatrix4fv(enemyTransformLocation, 1, GL_FALSE, *transformationMatrix);
 
-    glBindVertexArray(playerVAO);
     glUseProgram(playerProgram);
+    glBindVertexArray(playerVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     //enemy player
 
-    glBindVertexArray(enemyVAO);
+    //BUG: opengl cant draw both at the same time
+
     glUseProgram(enemyProgram);
+    glBindVertexArray(enemyVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    glBindVertexArray(0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
