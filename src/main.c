@@ -152,22 +152,22 @@ int main(){
     glm_translate(transformationMatrix, newCoord);
     unsigned int playerTransformLocation = glGetUniformLocation(playerProgram, "playerTransform");
     unsigned int enemyTransformLocation = glGetUniformLocation(enemyProgram, "enemyTransform");
+    glUseProgram(playerProgram);
     glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *transformationMatrix);
+    glUseProgram(enemyProgram);
     glUniformMatrix4fv(enemyTransformLocation, 1, GL_FALSE, *transformationMatrix);
 
     glUseProgram(playerProgram);
     glBindVertexArray(playerVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    //enemy player
-
-    //BUG: opengl cant draw both at the same time
-
     glUseProgram(enemyProgram);
+    glUseProgram(playerProgram);
     glBindVertexArray(enemyVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glBindVertexArray(0);
+    glUseProgram(0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
