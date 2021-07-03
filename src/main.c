@@ -5,10 +5,11 @@
 #include <cglm/cglm.h>
 #include <math.h>
 #include "../shaders/playerShader.h"
+#include "../shaders/ballShader.h"
 
 //consts
-int WIDTH = 1920;
-int HEIGHT = 1080;
+int WIDTH = 900;
+int HEIGHT = 900;
 
 const float movementSpeed = 5.f;
 float deltatime = 0.f;
@@ -23,7 +24,7 @@ float tileHeight = 0.2f;
 float tileWidth = 0.05f;
 
 //shaders
-const float vertices[] = {
+const float paddleVertices[] = {
   // player             //enemy
   -0.95f, 0.2f, 0.f,    1.f, 0.2f, 0.f, // right up
   -1.f, 0.2f, 0.f,      0.95f, 0.2f, 0.f, //left up
@@ -72,19 +73,26 @@ int main(){
 
   //compiler shaders
   unsigned int playerVertexShader, playerFragmentShader;
-  unsigned int enemyVertexShader, enemyFragmentShader;
+  unsigned int ballVertexShader, ballFragmentShader;
   createShader(&playerVertexShader, playerVertexShaderSource, &playerFragmentShader, playerFragmentShaderSource);
+  createShader(&ballVertexShader, ballVertexShaderSource, &ballFragmentShader, ballFragmentShaderSource);
 
   //create program
   int success;
-  unsigned int playerProgram;
+  unsigned int playerProgram, ballProgram;
   playerProgram = glCreateProgram();
+  ballProgram = glCreateProgram();
+
 
   //player
   glAttachShader(playerProgram, playerVertexShader);
   glAttachShader(playerProgram, playerFragmentShader);;
+  //ball
+  glAttachShader(ballProgram, ballVertexShader);
+  glAttachShader(ballProgram, ballFragmentShader);;
   //link
   glLinkProgram(playerProgram);
+  glLinkProgram(ballProgram);
 
   glGetProgramiv(playerProgram, GL_LINK_STATUS, &success);
   if(!success){
@@ -94,20 +102,47 @@ int main(){
     printf("Linking error: %s\n", message);
   }
 
+  glGetProgramiv(ballProgram, GL_LINK_STATUS, &success);
+  if(!success){
+    char message[1024];
+    int length = 0;
+    glGetProgramInfoLog(ballProgram, 1024, &length, message);
+    printf("Linking error: %s\n", message);
+  }
+
+  //create circle
+  float circleVertices[360][3];
+  float realCircleVertices[360*3];
+  createCircleVertices(0.2f, 0.5f, 0.02, 360, circleVertices);
+  int ROW_COUNT = 360;
+  int COL_COUNT = 3;
+  for(int row = 0; row < ROW_COUNT; row++) {
+    for(int col = 0; col < COL_COUNT; col++){
+      realCircleVertices[row * COL_COUNT + col] = circleVertices[row][col];
+    }
+  }
+
   //delete shaders
   glDeleteShader(playerVertexShader);
   glDeleteShader(playerFragmentShader);
+  glDeleteShader(ballVertexShader);
+  glDeleteShader(ballFragmentShader);
 
+  //player
   unsigned int playerVBO, playerVAO;
+  //enemy
   unsigned int enemyVBO, enemyVAO;
+  //ball
+  unsigned int ballVBO, ballVAO;
 
   glGenVertexArrays(1, &playerVAO);
   glGenVertexArrays(1, &enemyVAO);
+  glGenVertexArrays(1, &ballVAO);
 
   glBindVertexArray(playerVAO);
   glGenBuffers(1, &playerVBO);
   glBindBuffer(GL_ARRAY_BUFFER, playerVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices),vertices, GL_STREAM_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(paddleVertices),paddleVertices, GL_STREAM_DRAW);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
@@ -115,12 +150,21 @@ int main(){
   glBindVertexArray(enemyVAO);
   glGenBuffers(1, &enemyVBO);
   glBindBuffer(GL_ARRAY_BUFFER, enemyVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STREAM_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(paddleVertices), paddleVertices, GL_STREAM_DRAW);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
   glEnableVertexAttribArray(0);
 
+  glBindVertexArray(ballVAO);
+  glGenBuffers(1, &ballVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, ballVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(circleVertices), circleVertices, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
+
   glBindVertexArray(0);
+
 
   while(!glfwWindowShouldClose(window)){
     float currentFrame = (float)glfwGetTime();
@@ -151,6 +195,10 @@ int main(){
 
     glBindVertexArray(enemyVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    glUseProgram(ballProgram);
+    glBindVertexArray(ballVAO);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 360);
 
     glBindVertexArray(0);
     glUseProgram(0);

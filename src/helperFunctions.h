@@ -1,6 +1,7 @@
 #ifndef HELPER_H
 #define HELPER_H
 #include <stdio.h>
+#include <math.h>
 #include "../include/glad/glad/glad.h"
 #include <GLFW/glfw3.h> 
 
@@ -27,6 +28,20 @@ void createShader(unsigned int* vertexShader, const char* vertexShaderSource, un
     int length = 0;
     char message[1024];
     glGetShaderInfoLog(*fragmentShader, 1024, &length, message);
+  }
+}
+
+void createCircleVertices(float cx, float cy, float radius, int amountOfPoints, float vertices[360][3]){
+  for (int i = 0; i < amountOfPoints; i++){
+    float angle = 2.f * M_PI * (float) i / (float) amountOfPoints;
+    float x = radius * cosf(angle); 
+    float y = radius * sinf(angle);
+    x += cx;
+    y += cy;
+    float z = 0.f;
+    vertices[i][0] = x;
+    vertices[i][1] = y;
+    vertices[i][2] = z;
   }
 }
 
