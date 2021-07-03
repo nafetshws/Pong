@@ -5,7 +5,6 @@
 #include <cglm/cglm.h>
 #include <math.h>
 #include "../shaders/playerShader.h"
-//#include "../shaders/enemyShader.h"
 
 //consts
 int WIDTH = 1920;
@@ -75,7 +74,6 @@ int main(){
   unsigned int playerVertexShader, playerFragmentShader;
   unsigned int enemyVertexShader, enemyFragmentShader;
   createShader(&playerVertexShader, playerVertexShaderSource, &playerFragmentShader, playerFragmentShaderSource);
-  //createShader(&enemyVertexShader, enemyVertexShaderSource, &enemyFragmentShader, enemyFragmentShaderSource);
 
   //create program
   int success;
