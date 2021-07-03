@@ -17,4 +17,4 @@ This is a simple pong game written in c. You are able to play single player, aga
 - glad
  
 ## TODO
-- fix fowards and backwards movement
+- can't move both paddles at once 
