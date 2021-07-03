@@ -15,7 +15,8 @@ const float movementSpeed = 5.f;
 float deltatime = 0.f;
 float lastFrame = 0.f;
 
-float yValue = 0.5;
+float newPlayerYCoord = 0.5f;
+float newEnemyYCoord = 0.5f;
 
 const char* TITLE = "PONG";
 
@@ -133,20 +134,22 @@ int main(){
     glClear(GL_COLOR_BUFFER_BIT);
 
     //change vertex positions
-    mat4 transformationMatrix;
-    vec3 newCoord = {0.f, yValue, 0.f};
-    glm_mat4_identity(transformationMatrix);
-    glm_translate(transformationMatrix, newCoord);
+    mat4 playerTransformationMatrix;
+    vec3 newPlayerCoord = {0.f, newPlayerYCoord, 0.f};
+    glm_mat4_identity(playerTransformationMatrix);
+    glm_translate(playerTransformationMatrix, newPlayerCoord);
     unsigned int playerTransformLocation = glGetUniformLocation(playerProgram, "playerTransform");
     glUseProgram(playerProgram);
-    glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *transformationMatrix);
+    glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *playerTransformationMatrix);
 
     glBindVertexArray(playerVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    mat4 identityMatrix;
-    glm_mat4_identity(identityMatrix);
-    glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *identityMatrix);
+    mat4 enemyTransformationMatrix;
+    vec3 newEnemyCoord ={0.f, newEnemyYCoord, 0.f};
+    glm_mat4_identity(enemyTransformationMatrix);
+    glm_translate(enemyTransformationMatrix, newEnemyCoord);
+    glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *enemyTransformationMatrix);
 
     glBindVertexArray(enemyVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -171,20 +174,24 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
     glfwSetWindowShouldClose(window, 1);
   }
-  if(key == GLFW_KEY_A){
-    printf("Pressed a\n");
+  if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+    if(newEnemyYCoord + tileHeight < 1.f){
+      newEnemyYCoord += movementSpeed * deltatime;
+    }
   }
-  if(key == GLFW_KEY_D){
-    printf("Pressed d\n");
+  if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+    if(newEnemyYCoord > -1.f){
+      newEnemyYCoord -= movementSpeed * deltatime;
+    }
   }
   if(key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    if(yValue + tileHeight < 1.f){
-      yValue += movementSpeed * deltatime;
+    if(newPlayerYCoord + tileHeight < 1.f){
+      newPlayerYCoord += movementSpeed * deltatime;
     }
   }
   if(key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    if(yValue > -1.f){
-      yValue -= movementSpeed * deltatime;
+    if(newPlayerYCoord > -1.f){
+      newPlayerYCoord -= movementSpeed * deltatime;
     }
   }
 }
