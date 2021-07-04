@@ -6,6 +6,7 @@
 #include <math.h>
 #include "../shaders/playerShader.h"
 #include "../shaders/ballShader.h"
+#include "../shaders/lineShader.h"
 
 //consts
 int WIDTH = 900;
@@ -34,6 +35,16 @@ const float paddleVertices[] = {
   -0.95, 0.2f, 0.f,     0.95f, 0.2f, 0.f, // right up
 };
 
+const float lineVertices[] = {
+  0.f, 1.f, 0.f, //top
+  0.f, -1.f, 0.f
+  //-0.05f, 1.f, 0.f, //top left
+  //-0.05f, -1.f, 0.f, //bottom left
+  //0.05f, 1.f, 0.f, //top right
+  //0.05f, 1.f, 0.f, //top right
+  //0.05f, -1.f, 0.f, //bottom right
+  //-0.05f, -1.f, 0.f //bottom left
+};
 
 //set all callback functions
 void error_callback(int error, const char* description);
@@ -74,15 +85,17 @@ int main(){
   //compiler shaders
   unsigned int playerVertexShader, playerFragmentShader;
   unsigned int ballVertexShader, ballFragmentShader;
+  unsigned int lineVertexShader, lineFragmentShader;
   createShader(&playerVertexShader, playerVertexShaderSource, &playerFragmentShader, playerFragmentShaderSource);
   createShader(&ballVertexShader, ballVertexShaderSource, &ballFragmentShader, ballFragmentShaderSource);
-
+  createShader(&lineVertexShader, lineVertexShaderSource, &lineFragmentShader, lineFragmentShaderSource);
+  
   //create program
   int success;
-  unsigned int playerProgram, ballProgram;
+  unsigned int playerProgram, ballProgram, lineProgram;
   playerProgram = glCreateProgram();
   ballProgram = glCreateProgram();
-
+  lineProgram = glCreateProgram();
 
   //player
   glAttachShader(playerProgram, playerVertexShader);
@@ -90,9 +103,13 @@ int main(){
   //ball
   glAttachShader(ballProgram, ballVertexShader);
   glAttachShader(ballProgram, ballFragmentShader);;
+  //line
+  glAttachShader(lineProgram, lineVertexShader);
+  glAttachShader(lineProgram, lineFragmentShader);
   //link
   glLinkProgram(playerProgram);
   glLinkProgram(ballProgram);
+  glLinkProgram(lineProgram);
 
   glGetProgramiv(playerProgram, GL_LINK_STATUS, &success);
   if(!success){
@@ -107,6 +124,14 @@ int main(){
     char message[1024];
     int length = 0;
     glGetProgramInfoLog(ballProgram, 1024, &length, message);
+    printf("Linking error: %s\n", message);
+  }
+
+  glGetProgramiv(lineProgram, GL_LINK_STATUS, &success);
+  if(!success){
+    char message[1024];
+    int length = 0;
+    glGetProgramInfoLog(lineProgram, 1024, &length, message);
     printf("Linking error: %s\n", message);
   }
 
@@ -127,6 +152,8 @@ int main(){
   glDeleteShader(playerFragmentShader);
   glDeleteShader(ballVertexShader);
   glDeleteShader(ballFragmentShader);
+  glDeleteShader(lineVertexShader);
+  glDeleteShader(lineFragmentShader);
 
   //player
   unsigned int playerVBO, playerVAO;
@@ -134,10 +161,13 @@ int main(){
   unsigned int enemyVBO, enemyVAO;
   //ball
   unsigned int ballVBO, ballVAO;
+  //middle line
+  unsigned int lineVBO, lineVAO;
 
   glGenVertexArrays(1, &playerVAO);
   glGenVertexArrays(1, &enemyVAO);
   glGenVertexArrays(1, &ballVAO);
+  glGenVertexArrays(1, &lineVAO);
 
   glBindVertexArray(playerVAO);
   glGenBuffers(1, &playerVBO);
@@ -159,6 +189,14 @@ int main(){
   glGenBuffers(1, &ballVBO);
   glBindBuffer(GL_ARRAY_BUFFER, ballVBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(circleVertices), circleVertices, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
+
+  glBindVertexArray(lineVAO);
+  glGenBuffers(1, &lineVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(lineVertices), lineVertices, GL_STATIC_DRAW);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
@@ -200,9 +238,14 @@ int main(){
     glBindVertexArray(ballVAO);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 360);
 
+    glUseProgram(lineProgram);
+    glBindVertexArray(lineVAO);
+    glDrawArrays(GL_LINES, 0, 2);
+
     glBindVertexArray(0);
     glUseProgram(0);
 
+    glfwSwapInterval(1);
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
