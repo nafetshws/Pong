@@ -13,6 +13,7 @@ int WIDTH = 900;
 int HEIGHT = 900;
 
 const float movementSpeed = 5.f;
+const float ballRadius = 0.02f;
 float deltatime = 0.f;
 float lastFrame = 0.f;
 
@@ -132,7 +133,7 @@ int main(){
   //create circle
   float circleVertices[360][3];
   float realCircleVertices[360*3];
-  createCircleVertices(0.2f, 0.5f, 0.02, 360, circleVertices);
+  createCircleVertices(0.0f, 0.0f, ballRadius, 360, circleVertices);
   int ROW_COUNT = 360;
   int COL_COUNT = 3;
   for(int row = 0; row < ROW_COUNT; row++) {
@@ -197,6 +198,7 @@ int main(){
 
   glBindVertexArray(0);
 
+  vec3 ballCoord = {0.f, 0.f, 0.f};
 
   while(!glfwWindowShouldClose(window)){
     float currentFrame = (float)glfwGetTime();
@@ -231,10 +233,10 @@ int main(){
     glUseProgram(ballProgram);
     glBindVertexArray(ballVAO);
     mat4 ballTransformationMatrix;
-    float newBallYCoord = sin(glfwGetTime());
-    vec3 newBallCoord = {0.f, newBallYCoord, 0.f};
+    float newBallXCoord = sin(glfwGetTime());
+    ballCoord[0] = newBallXCoord;
     glm_mat4_identity(ballTransformationMatrix);
-    glm_translate(ballTransformationMatrix, newBallCoord);
+    glm_translate(ballTransformationMatrix, ballCoord);
     unsigned int ballLocation = glGetUniformLocation(ballProgram, "transformation");
     glUniformMatrix4fv(ballLocation, 1, GL_FALSE, *ballTransformationMatrix);;
     glDrawArrays(GL_TRIANGLE_FAN, 0, 360);
