@@ -3,8 +3,9 @@
 
 const char* ballVertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 ballPos;\n"
+"uniform mat4 transformation;\n"
 "void main(){\n"
-"gl_Position = vec4(ballPos, 1.0f);\n"
+"gl_Position = transformation * vec4(ballPos, 1.0f);\n"
 "}\0";
 
 const char* ballFragmentShaderSource = "#version 330 core\n"

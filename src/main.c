@@ -37,13 +37,7 @@ const float paddleVertices[] = {
 
 const float lineVertices[] = {
   0.f, 1.f, 0.f, //top
-  0.f, -1.f, 0.f
-  //-0.05f, 1.f, 0.f, //top left
-  //-0.05f, -1.f, 0.f, //bottom left
-  //0.05f, 1.f, 0.f, //top right
-  //0.05f, 1.f, 0.f, //top right
-  //0.05f, -1.f, 0.f, //bottom right
-  //-0.05f, -1.f, 0.f //bottom left
+  0.f, -1.f, 0.f //bottom
 };
 
 //set all callback functions
@@ -226,7 +220,7 @@ int main(){
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     mat4 enemyTransformationMatrix;
-    vec3 newEnemyCoord ={0.f, newEnemyYCoord, 0.f};
+    vec3 newEnemyCoord = {0.f, newEnemyYCoord, 0.f};
     glm_mat4_identity(enemyTransformationMatrix);
     glm_translate(enemyTransformationMatrix, newEnemyCoord);
     glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *enemyTransformationMatrix);
@@ -236,6 +230,13 @@ int main(){
 
     glUseProgram(ballProgram);
     glBindVertexArray(ballVAO);
+    mat4 ballTransformationMatrix;
+    float newBallYCoord = sin(glfwGetTime());
+    vec3 newBallCoord = {0.f, newBallYCoord, 0.f};
+    glm_mat4_identity(ballTransformationMatrix);
+    glm_translate(ballTransformationMatrix, newBallCoord);
+    unsigned int ballLocation = glGetUniformLocation(ballProgram, "transformation");
+    glUniformMatrix4fv(ballLocation, 1, GL_FALSE, *ballTransformationMatrix);;
     glDrawArrays(GL_TRIANGLE_FAN, 0, 360);
 
     glUseProgram(lineProgram);
@@ -263,22 +264,22 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
     glfwSetWindowShouldClose(window, 1);
   }
-  if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+  if(key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)){
     if(newEnemyYCoord + tileHeight < 1.f){
       newEnemyYCoord += movementSpeed * deltatime;
     }
   }
-  if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+  if(key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)){
     if(newEnemyYCoord > -1.f){
       newEnemyYCoord -= movementSpeed * deltatime;
     }
   }
-  if(key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+  if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)){
     if(newPlayerYCoord + tileHeight < 1.f){
       newPlayerYCoord += movementSpeed * deltatime;
     }
   }
-  if(key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+  if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)){
     if(newPlayerYCoord > -1.f){
       newPlayerYCoord -= movementSpeed * deltatime;
     }
