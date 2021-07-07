@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "../include/glad/glad/glad.h"
+#include "type_structs.h"
 #include <GLFW/glfw3.h> 
 
 void createShader(unsigned int* vertexShader, const char* vertexShaderSource, unsigned int* fragmentShader, const char* fragmentShaderSource){
@@ -42,6 +43,41 @@ void createCircleVertices(float cx, float cy, float radius, int amountOfPoints, 
     vertices[i][0] = x;
     vertices[i][1] = y;
     vertices[i][2] = z;
+  }
+}
+
+int checkTopBottomCollision(struct Ball ball, float* collidingPoint){
+  if(ball.position[1] + ball.radius >= 1.f || ball.position[1] - ball.radius <= -1.f){
+    //collided with top or bottom
+    *collidingPoint = ball.position[0];
+    return 1;
+  }
+  else{
+    *collidingPoint = 0.f; 
+    return -1; 
+  }
+}
+
+int checkWallCollision(struct Ball ball, float* collidingPoint){
+  if(ball.position[0] + ball.radius >= 1.f || ball.position[0] - ball.radius <= -1.f){
+    //collided with top or bottom
+    *collidingPoint = ball.position[1];
+    return 1;
+  }
+  else{
+    *collidingPoint = 0.f; 
+    return -1; 
+  }
+}
+
+int checkPaddleCollision(struct Ball ball, struct Paddle leftPaddle, struct Paddle rightPaddle){
+  //x axis -> left paddle
+  if(fabs((double) (-1.f - (ball.position[0] - ball.radius))) <= leftPaddle.width){
+    printf("overlapping x axis -> left paddle\n");
+  }
+  //x axis -> right paddle
+  if(1.f - (ball.position[0] + ball.radius) <= rightPaddle.width){
+    printf("overlapping x axis -> right paddle\n");
   }
 }
 

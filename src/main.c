@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "helperFunctions.h"
-#include "type_structs.h"
+#include "../include/helper_functions.h"
+#include "../include/type_structs.h"
 #include "../include/glad/glad/glad.h" 
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
@@ -15,6 +15,8 @@ int HEIGHT = 900;
 
 const float movementSpeed = 5.f;
 const float BALL_RADIUS = 0.02f;
+const float PADDLE_WIDTH = 0.05f;
+const float PADDLE_HEIGHT = 0.2f;
 float deltatime = 0.f;
 float lastFrame = 0.f;
 
@@ -23,18 +25,15 @@ float newEnemyYCoord = 0.5f;
 
 const char* TITLE = "PONG";
 
-float tileHeight = 0.2f;
-float tileWidth = 0.05f;
-
 //shaders
 const float paddleVertices[] = {
-  // player             //enemy
-  -0.95f, 0.2f, 0.f,    1.f, 0.2f, 0.f, // right up
-  -1.f, 0.2f, 0.f,      0.95f, 0.2f, 0.f, //left up
-  -1.f, 0.f, 0.f,       1.f, 0.f, 0.f, // left down
-  -1.f, 0.f, 0.f,       1.f, 0.f, 0.f, // left down
-  -0.95, 0.f, 0.f,      0.95f, 0.f, 0.f, //right down
-  -0.95, 0.2f, 0.f,     0.95f, 0.2f, 0.f, // right up
+  // player                                               //enemy
+  -1.f + PADDLE_WIDTH, PADDLE_HEIGHT / 2.f, 0.f,          1.f, PADDLE_HEIGHT / 2.f, 0.f, // right up
+  -1.f, PADDLE_HEIGHT / 2.f, 0.f,                         1.f - PADDLE_WIDTH, PADDLE_HEIGHT / 2.f, 0.f, //left up
+  -1.f, -(PADDLE_HEIGHT / 2.f), 0.f,                      1.f, -(PADDLE_HEIGHT / 2.f), 0.f, // left down
+  -1.f, -(PADDLE_HEIGHT / 2.f), 0.f,                      1.f, -(PADDLE_HEIGHT / 2.f), 0.f, // left down
+  -1.f + PADDLE_WIDTH, -(PADDLE_HEIGHT / 2.f), 0.f,       1.f - PADDLE_WIDTH, -(PADDLE_HEIGHT / 2.f), 0.f, //right down
+  -1.f + PADDLE_WIDTH, PADDLE_HEIGHT / 2.f, 0.f,          1.f - PADDLE_WIDTH, PADDLE_HEIGHT / 2.f, 0.f, // right up
 };
 
 const float lineVertices[] = {
@@ -207,6 +206,20 @@ int main(){
   }
   ball.radius = BALL_RADIUS;
 
+  vec3 startPaddlePos = {0.f, 0.f, 0.f};
+  //left
+  struct Paddle leftPaddle;
+  for(int i = 0; i < 3; i++){
+    leftPaddle.position[i] = startPaddlePos[i];
+  }
+  leftPaddle.isLeft = 1;
+  //right
+  struct Paddle rightPaddle;
+  for(int i = 0; i < 3; i++){
+    rightPaddle.position[i] = startPaddlePos[i];
+  }
+  rightPaddle.isLeft = 0;
+
   //vec3 ballCoord = {0.f, 0.f, 0.f};
 
   while(!glfwWindowShouldClose(window)){
@@ -220,9 +233,9 @@ int main(){
 
     //change vertex positions
     mat4 playerTransformationMatrix;
-    vec3 newPlayerCoord = {0.f, newPlayerYCoord, 0.f};
+    leftPaddle.position[1] = newPlayerYCoord;
     glm_mat4_identity(playerTransformationMatrix);
-    glm_translate(playerTransformationMatrix, newPlayerCoord);
+    glm_translate(playerTransformationMatrix, leftPaddle.position);
     unsigned int playerTransformLocation = glGetUniformLocation(playerProgram, "playerTransform");
     glUseProgram(playerProgram);
     glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *playerTransformationMatrix);
@@ -231,9 +244,9 @@ int main(){
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     mat4 enemyTransformationMatrix;
-    vec3 newEnemyCoord = {0.f, newEnemyYCoord, 0.f};
+    rightPaddle.position[1] = newEnemyYCoord;
     glm_mat4_identity(enemyTransformationMatrix);
-    glm_translate(enemyTransformationMatrix, newEnemyCoord);
+    glm_translate(enemyTransformationMatrix, rightPaddle.position);
     glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *enemyTransformationMatrix);
 
     glBindVertexArray(enemyVAO);
@@ -244,10 +257,13 @@ int main(){
     glBindVertexArray(ballVAO);
     mat4 ballTransformationMatrix;
     float newBallXCoord = sin(glfwGetTime());
-    //ballCoord[0] = newBallXCoord;
-    ball.position[0] = newBallXCoord;
-    if(ball.position[0] <= -0.99f || ball.position[0] >= 0.99f){
-      printf("X coord: %f\n", ball.position[0]);
+    ball.position[1] = newBallXCoord;
+    float collidingPoint;
+    if(checkWallCollision(ball, &collidingPoint) == 1){
+      //printf("Ball collided with wall\n");
+    }
+    if(checkTopBottomCollision(ball, &collidingPoint) == 1){
+      //printf("Ball collided with top or botttom\n");
     }
     glm_mat4_identity(ballTransformationMatrix);
     glm_translate(ballTransformationMatrix, ball.position);
@@ -281,23 +297,43 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     glfwSetWindowShouldClose(window, 1);
   }
   if(key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    if(newEnemyYCoord + tileHeight < 1.f){
-      newEnemyYCoord += movementSpeed * deltatime;
+    if(newEnemyYCoord + (PADDLE_HEIGHT /2.f) < 1.f){
+      if(newEnemyYCoord + movementSpeed*deltatime <= 1.f){
+        newEnemyYCoord += movementSpeed * deltatime;
+      }
+      else{
+        newEnemyYCoord = 1.f;
+      }
     }
   }
   if(key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    if(newEnemyYCoord > -1.f){
-      newEnemyYCoord -= movementSpeed * deltatime;
+    if(newEnemyYCoord + -(PADDLE_HEIGHT / 2.f) > -1.f){
+      if(newEnemyYCoord - movementSpeed*deltatime >= -1.f){
+        newEnemyYCoord -= movementSpeed * deltatime;
+      }
+      else{
+        newEnemyYCoord = -1.f;
+      }
     }
   }
   if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    if(newPlayerYCoord + tileHeight < 1.f){
-      newPlayerYCoord += movementSpeed * deltatime;
+    if(newPlayerYCoord + (PADDLE_HEIGHT / 2.f) < 1.f){
+      if(newPlayerYCoord + movementSpeed*deltatime <= 1.f){
+        newPlayerYCoord += movementSpeed * deltatime;
+      }
+      else{
+        newPlayerYCoord = 1.f;
+      }
     }
   }
   if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    if(newPlayerYCoord > -1.f){
-      newPlayerYCoord -= movementSpeed * deltatime;
+    if(newPlayerYCoord + -(PADDLE_HEIGHT /2.f) >= -1.f){
+      if(newPlayerYCoord - movementSpeed*deltatime >= -1.f){
+        newPlayerYCoord -= movementSpeed * deltatime;
+      }
+      else{
+        newPlayerYCoord = -1.f;
+      }
     }
   }
 }

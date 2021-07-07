@@ -8,4 +8,11 @@ struct Ball{
   float radius;
 };
 
+struct Paddle{
+  vec3 position;
+  int isLeft;
+  float width;
+  float height;
+};
+
 #endif
