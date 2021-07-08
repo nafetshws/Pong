@@ -25,6 +25,10 @@ float newEnemyYCoord = 0.5f;
 
 const char* TITLE = "PONG";
 
+struct Ball ball;
+struct Paddle leftPaddle;
+struct Paddle rightPaddle;
+
 //shaders
 const float paddleVertices[] = {
   // player                                               //enemy
@@ -76,6 +80,24 @@ int main(){
   glfwSetKeyCallback(window, key_callback);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetErrorCallback(error_callback);
+
+  vec3 ballPos = {0.f, 0.f, 0.f};
+  for(int i = 0; i < 3; i++){
+    ball.position[i] = ballPos[i];
+  }
+  ball.radius = BALL_RADIUS;
+
+  vec3 startPaddlePos = {0.f, 0.f, 0.f};
+  //left
+  for(int i = 0; i < 3; i++){
+    leftPaddle.position[i] = startPaddlePos[i];
+  }
+  leftPaddle.left = 1;
+  //right
+  for(int i = 0; i < 3; i++){
+    rightPaddle.position[i] = startPaddlePos[i];
+  }
+  rightPaddle.left = 0;
 
   //compiler shaders
   unsigned int playerVertexShader, playerFragmentShader;
@@ -199,29 +221,6 @@ int main(){
 
   glBindVertexArray(0);
 
-  struct Ball ball;
-  vec3 ballPos = {0.f, 0.f, 0.f};
-  for(int i = 0; i < 3; i++){
-    ball.position[i] = ballPos[i];
-  }
-  ball.radius = BALL_RADIUS;
-
-  vec3 startPaddlePos = {0.f, 0.f, 0.f};
-  //left
-  struct Paddle leftPaddle;
-  for(int i = 0; i < 3; i++){
-    leftPaddle.position[i] = startPaddlePos[i];
-  }
-  leftPaddle.isLeft = 1;
-  //right
-  struct Paddle rightPaddle;
-  for(int i = 0; i < 3; i++){
-    rightPaddle.position[i] = startPaddlePos[i];
-  }
-  rightPaddle.isLeft = 0;
-
-  //vec3 ballCoord = {0.f, 0.f, 0.f};
-
   while(!glfwWindowShouldClose(window)){
     float currentFrame = (float)glfwGetTime();
     deltatime = currentFrame - lastFrame;
@@ -233,7 +232,7 @@ int main(){
 
     //change vertex positions
     mat4 playerTransformationMatrix;
-    leftPaddle.position[1] = newPlayerYCoord;
+    //leftPaddle.position[1] = newPlayerYCoord;
     glm_mat4_identity(playerTransformationMatrix);
     glm_translate(playerTransformationMatrix, leftPaddle.position);
     unsigned int playerTransformLocation = glGetUniformLocation(playerProgram, "playerTransform");
@@ -257,13 +256,10 @@ int main(){
     glBindVertexArray(ballVAO);
     mat4 ballTransformationMatrix;
     float newBallXCoord = sin(glfwGetTime());
-    ball.position[1] = newBallXCoord;
+    ball.position[0] = newBallXCoord;
     float collidingPoint;
-    if(checkWallCollision(ball, &collidingPoint) == 1){
-      //printf("Ball collided with wall\n");
-    }
-    if(checkTopBottomCollision(ball, &collidingPoint) == 1){
-      //printf("Ball collided with top or botttom\n");
+    if(checkPaddleCollision(ball, leftPaddle, rightPaddle, &collidingPoint)){
+      printf("Detected collision\n");
     }
     glm_mat4_identity(ballTransformationMatrix);
     glm_translate(ballTransformationMatrix, ball.position);

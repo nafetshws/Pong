@@ -10,7 +10,7 @@ struct Ball{
 
 struct Paddle{
   vec3 position;
-  int isLeft;
+  int left;
   float width;
   float height;
 };
