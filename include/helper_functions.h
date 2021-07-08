@@ -73,28 +73,29 @@ int checkWallCollision(struct Ball ball, float* collidingPoint){
 int checkCustomPaddleCollision(struct Ball ball, struct Paddle paddle){
   int isYAxisAligned = 0;
   int isXAxisAligned = 0;
-  printf("paddle height: %f\n", paddle.position[1]);
   //x axis -> check if ball is overlapping paddles
-  if(paddle.left && fabs((double) (-1.f - (ball.position[0] - ball.radius))) <= paddle.width){
-      printf("X axis is overlapping\n");
+  if(paddle.left && 1.f - fabs((float)(ball.position[0] - ball.radius)) <= paddle.width){
+      //printf("X axis for left paddle is overlapping\n");
       isXAxisAligned = 1;
   }
   else if(!paddle.left && 1.f - (ball.position[0] + ball.radius) <= paddle.width){
+      //printf("X axis for right paddle is overlapping\n");
       isXAxisAligned = 1;
   }
   //y axis -> check if ball is overlapping y axis 
-  if(ball.position[1] - ball.radius >= paddle.position[1] && ball.position[1] + ball.radius <= (paddle.position[1] + paddle.height)){
-    printf("y axis is overlapping\n");
+  if(ball.position[1]>= paddle.position[1] - paddle.height / 2 && ball.position[1] <= paddle.position[1] + paddle.height / 2){
     isYAxisAligned = 1;
   }
   return (isXAxisAligned && isYAxisAligned) ? 1 : 0;
 }
 
 int checkPaddleCollision(struct Ball ball, struct Paddle leftPaddle, struct Paddle rightPaddle, float* collisionPoint){
-  //x axis -> left paddle
-  if(checkCustomPaddleCollision(ball, leftPaddle) && checkCustomPaddleCollision(ball, rightPaddle)){
+  int hasLeftPaddleCollided = checkCustomPaddleCollision(ball, leftPaddle);
+  int hasRightPaddleCollided  = checkCustomPaddleCollision(ball, rightPaddle);
+  if(hasLeftPaddleCollided || hasRightPaddleCollided){
     return 1;
   }
+  return 0;
 }
 
 #endif

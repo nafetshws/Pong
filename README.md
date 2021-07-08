@@ -14,7 +14,8 @@ This is a simple pong game written in c. You are able to play single player, aga
 
 ## libaries:
 - GLFW
-- glad
+- GLAD
+- CGLM
  
 ## TODO
 - implement mouse movement 

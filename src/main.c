@@ -93,11 +93,15 @@ int main(){
     leftPaddle.position[i] = startPaddlePos[i];
   }
   leftPaddle.left = 1;
+  leftPaddle.height = PADDLE_HEIGHT;
+  leftPaddle.width = PADDLE_WIDTH;
   //right
   for(int i = 0; i < 3; i++){
     rightPaddle.position[i] = startPaddlePos[i];
   }
   rightPaddle.left = 0;
+  rightPaddle.height = PADDLE_HEIGHT;
+  rightPaddle.width = PADDLE_WIDTH;
 
   //compiler shaders
   unsigned int playerVertexShader, playerFragmentShader;
