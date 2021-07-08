@@ -230,9 +230,8 @@ int main(){
     //glClearColor(0.2f, 02.f, 0.2f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    //change vertex positions
+    //player -> left paddle
     mat4 playerTransformationMatrix;
-    //leftPaddle.position[1] = newPlayerYCoord;
     glm_mat4_identity(playerTransformationMatrix);
     glm_translate(playerTransformationMatrix, leftPaddle.position);
     unsigned int playerTransformLocation = glGetUniformLocation(playerProgram, "playerTransform");
@@ -242,8 +241,8 @@ int main(){
     glBindVertexArray(playerVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
+    //enemy -> right paddle
     mat4 enemyTransformationMatrix;
-    rightPaddle.position[1] = newEnemyYCoord;
     glm_mat4_identity(enemyTransformationMatrix);
     glm_translate(enemyTransformationMatrix, rightPaddle.position);
     glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *enemyTransformationMatrix);
@@ -293,42 +292,42 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     glfwSetWindowShouldClose(window, 1);
   }
   if(key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    if(newEnemyYCoord + (PADDLE_HEIGHT /2.f) < 1.f){
-      if(newEnemyYCoord + movementSpeed*deltatime <= 1.f){
-        newEnemyYCoord += movementSpeed * deltatime;
+    if(rightPaddle.position[1] + (PADDLE_HEIGHT /2.f) < 1.f){
+      if(rightPaddle.position[1] + movementSpeed*deltatime <= 1.f){
+        rightPaddle.position[1] += movementSpeed * deltatime;
       }
       else{
-        newEnemyYCoord = 1.f;
+        rightPaddle.position[1] = 1.f;
       }
     }
   }
   if(key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    if(newEnemyYCoord + -(PADDLE_HEIGHT / 2.f) > -1.f){
-      if(newEnemyYCoord - movementSpeed*deltatime >= -1.f){
-        newEnemyYCoord -= movementSpeed * deltatime;
+    if(rightPaddle.position[1] + -(PADDLE_HEIGHT / 2.f) > -1.f){
+      if(rightPaddle.position[1] - movementSpeed*deltatime >= -1.f){
+        rightPaddle.position[1] -= movementSpeed * deltatime;
       }
       else{
-        newEnemyYCoord = -1.f;
+        rightPaddle.position[1] = -1.f;
       }
     }
   }
   if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    if(newPlayerYCoord + (PADDLE_HEIGHT / 2.f) < 1.f){
-      if(newPlayerYCoord + movementSpeed*deltatime <= 1.f){
-        newPlayerYCoord += movementSpeed * deltatime;
+    if(leftPaddle.position[1] + (PADDLE_HEIGHT / 2.f) < 1.f){
+      if(leftPaddle.position[1] + movementSpeed*deltatime <= 1.f){
+        leftPaddle.position[1] += movementSpeed * deltatime;
       }
       else{
-        newPlayerYCoord = 1.f;
+        leftPaddle.position[1] = 1.f;
       }
     }
   }
   if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)){
-    if(newPlayerYCoord + -(PADDLE_HEIGHT /2.f) >= -1.f){
-      if(newPlayerYCoord - movementSpeed*deltatime >= -1.f){
-        newPlayerYCoord -= movementSpeed * deltatime;
+    if(leftPaddle.position[1] + -(PADDLE_HEIGHT /2.f) >= -1.f){
+      if(leftPaddle.position[1] - movementSpeed*deltatime >= -1.f){
+        leftPaddle.position[1] -= movementSpeed * deltatime;
       }
       else{
-        newPlayerYCoord = -1.f;
+        leftPaddle.position[1] = -1.f;
       }
     }
   }
