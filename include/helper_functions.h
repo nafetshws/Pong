@@ -6,6 +6,17 @@
 #include "type_structs.h"
 #include <GLFW/glfw3.h> 
 
+
+//void createShader(unsigned int* vertexShader, const char* vertexShaderSource, unsigned int* fragmentShader, const char* fragmentShaderSource);
+//void createCircleVertices(float cx, float cy, float radius, int amountOfPoints, float vertices[360][3]);
+//int checkCollision(struct Ball ball, struct Paddle leftPaddle, struct Paddle rightPaddle, struct Collision* collision);
+//int checkTopBottomCollision(struct Ball ball, struct Collision* collision){
+//int checkWallCollision(struct Ball ball, struct Collision* collision);
+//int checkCustomPaddleCollision(struct Ball ball, struct Paddle paddle, struct Collision* collision);
+//int checkPaddleCollision(struct Ball ball, struct Paddle leftPaddle, struct Paddle rightPaddle, struct Collision* collision);
+//int calculateAngleOfHit(struct Collision collision, struct Paddle paddle);
+//float f(float x, int angle);
+
 void createShader(unsigned int* vertexShader, const char* vertexShaderSource, unsigned int* fragmentShader, const char* fragmentShaderSource){
   int success;
   //Vertex
@@ -47,27 +58,32 @@ void createCircleVertices(float cx, float cy, float radius, int amountOfPoints, 
   }
 }
 
-int checkTopBottomCollision(struct Ball ball, float* collidingPoint){
+int checkTopBottomCollision(struct Ball ball, struct Collision* collision){
   if(ball.position[1] + ball.radius >= 1.f || ball.position[1] - ball.radius <= -1.f){
     //collided with top or bottom
-    *collidingPoint = ball.position[0];
+    for(int i = 0; i < 3; i++){
+      (*collision).position[i] = ball.position[i];
+    }
+    (*collision).type = (ball.position[1] + ball.radius >= 1.f) ? COLLISION_TOP : COLLISION_BOTTOM;
     return 1;
   }
   else{
-    *collidingPoint = 0.f; 
-    return -1; 
+    return 0; 
   }
 }
 
-int checkWallCollision(struct Ball ball, float* collidingPoint){
+//REWORK
+int checkWallCollision(struct Ball ball, struct Collision* collision){
   if(ball.position[0] + ball.radius >= 1.f || ball.position[0] - ball.radius <= -1.f){
-    //collided with top or bottom
-    *collidingPoint = ball.position[1];
+    //collided with walls
+    for(int i = 0; i < 3; i++){
+      (*collision).position[i] = ball.position[i];
+    }
+    (*collision).type = (ball.position[0] + ball.radius >= 1.f) ? COLLISION_RIGHT_WALL : COLLISION_LEFT_WALL;
     return 1;
   }
   else{
-    *collidingPoint = 0.f; 
-    return -1; 
+    return 0; 
   }
 }
 
@@ -79,12 +95,12 @@ int checkCustomPaddleCollision(struct Ball ball, struct Paddle paddle, struct Co
   if(paddle.left && 1.f - fabs((float)(ball.position[0] - ball.radius)) <= paddle.width){
       //left paddle
       isXAxisAligned = 1;
-      type = COLLISION_LEFT_PADDLE;
+      (*collision).type = COLLISION_LEFT_PADDLE;
   }
   else if(!paddle.left && 1.f - (ball.position[0] + ball.radius) <= paddle.width){
       //right paddle
       isXAxisAligned = 1;
-      type = COLLISION_RIGHT_PADDLE;
+      (*collision).type = COLLISION_RIGHT_PADDLE;
   }
   //y axis -> check if ball is overlapping y axis 
   if(ball.position[1]>= paddle.position[1] - paddle.height / 2 && ball.position[1] <= paddle.position[1] + paddle.height / 2){
@@ -94,7 +110,6 @@ int checkCustomPaddleCollision(struct Ball ball, struct Paddle paddle, struct Co
     for(int i = 0; i < 3; i++){
       (*collision).position[i] = ball.position[i];
     }
-    (*collision).type = type;
   }
   return (isXAxisAligned && isYAxisAligned) ? 1 : 0;
 }
@@ -108,10 +123,22 @@ int checkPaddleCollision(struct Ball ball, struct Paddle leftPaddle, struct Padd
   return 0;
 }
 
+int checkCollision(struct Ball ball, struct Paddle leftPaddle, struct Paddle rightPaddle, struct Collision* collision){
+  if(checkTopBottomCollision(ball, collision) || checkPaddleCollision(ball, leftPaddle, rightPaddle, collision) || checkWallCollision(ball, collision)){
+    return 1;
+  }
+  return 0;
+}
+
 int calculateAngleOfHit(struct Collision collision, struct Paddle paddle){
   //calclulate angle -> relative hit: ball - paddle
   float angle = (-(paddle.position[1] - collision.position[1]) * (1 / (paddle.height / 2))) * 100;
-  return angle;
+  return (int)angle;
+}
+
+float f(float x, int angle){
+  float y = sqrt((double) (pow(x / cosf(angle), 2) - pow(x, 2)));
+  return y;
 }
 
 #endif

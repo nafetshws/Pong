@@ -60,6 +60,7 @@ int main(){
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
   GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, TITLE, NULL, NULL);
 
@@ -225,6 +226,10 @@ int main(){
 
   glBindVertexArray(0);
 
+  int hasCollided = 0;
+  float lastAngle;
+  float x = 1.f;
+
   while(!glfwWindowShouldClose(window)){
     float currentFrame = (float)glfwGetTime();
     deltatime = currentFrame - lastFrame;
@@ -260,13 +265,12 @@ int main(){
     mat4 ballTransformationMatrix;
     float newBallXCoord = sin(glfwGetTime());
     ball.position[0] = newBallXCoord;
-    struct Collision* paddleCollisionPtr = (struct Collision*)malloc(sizeof(struct Collision));
-    if(checkPaddleCollision(ball, leftPaddle, rightPaddle, paddleCollisionPtr)){
-      //collision with paddle
-      printf("Detected collision\n");
-      printf("x: %f y: %f\n", (*paddleCollisionPtr).position[0], (*paddleCollisionPtr).position[1]);
-      calculateAngleOfHit(*paddleCollisionPtr, (*paddleCollisionPtr).type == COLLISION_LEFT_PADDLE ? leftPaddle : rightPaddle);
+    struct Collision* collisionPtr = (struct Collision*)malloc(sizeof(struct Collision));
+    if(checkCollision(ball, leftPaddle, rightPaddle, collisionPtr)){
+      int angle = calculateAngleOfHit(*collisionPtr, (*collisionPtr).type == COLLISION_LEFT_PADDLE ? leftPaddle : rightPaddle);
+      printf("Collied with: %s\n", CollisionTypeNames[(*collisionPtr).type]);
     }
+    free(collisionPtr);
     glm_mat4_identity(ballTransformationMatrix);
     glm_translate(ballTransformationMatrix, ball.position);
     unsigned int ballLocation = glGetUniformLocation(ballProgram, "transformation");
