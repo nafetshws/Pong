@@ -24,6 +24,7 @@ void createShader(unsigned int* vertexShader, const char* vertexShaderSource, un
   glShaderSource(*fragmentShader, 1, & fragmentShaderSource, NULL);
   glCompileShader(*fragmentShader);
   glGetShaderiv(*fragmentShader, GL_COMPILE_STATUS, &success);
+  //check for error
   if(!success){
     printf("Failed to comile shader\n");
     int length = 0;
@@ -70,28 +71,37 @@ int checkWallCollision(struct Ball ball, float* collidingPoint){
   }
 }
 
-int checkCustomPaddleCollision(struct Ball ball, struct Paddle paddle){
+int checkCustomPaddleCollision(struct Ball ball, struct Paddle paddle, struct Collision* collision){
   int isYAxisAligned = 0;
   int isXAxisAligned = 0;
+  enum CollisionType type;
   //x axis -> check if ball is overlapping paddles
   if(paddle.left && 1.f - fabs((float)(ball.position[0] - ball.radius)) <= paddle.width){
-      //printf("X axis for left paddle is overlapping\n");
+      //left paddle
       isXAxisAligned = 1;
+      type = COLLISION_LEFT_PADDLE;
   }
   else if(!paddle.left && 1.f - (ball.position[0] + ball.radius) <= paddle.width){
-      //printf("X axis for right paddle is overlapping\n");
+      //right paddle
       isXAxisAligned = 1;
+      type = COLLISION_RIGHT_PADDLE;
   }
   //y axis -> check if ball is overlapping y axis 
   if(ball.position[1]>= paddle.position[1] - paddle.height / 2 && ball.position[1] <= paddle.position[1] + paddle.height / 2){
     isYAxisAligned = 1;
   }
+  if(isXAxisAligned && isXAxisAligned){
+    for(int i = 0; i < 3; i++){
+      (*collision).position[i] = ball.position[i];
+    }
+    (*collision).type = type;
+  }
   return (isXAxisAligned && isYAxisAligned) ? 1 : 0;
 }
 
-int checkPaddleCollision(struct Ball ball, struct Paddle leftPaddle, struct Paddle rightPaddle, float* collisionPoint){
-  int hasLeftPaddleCollided = checkCustomPaddleCollision(ball, leftPaddle);
-  int hasRightPaddleCollided  = checkCustomPaddleCollision(ball, rightPaddle);
+int checkPaddleCollision(struct Ball ball, struct Paddle leftPaddle, struct Paddle rightPaddle, struct Collision* collision){
+  int hasLeftPaddleCollided = checkCustomPaddleCollision(ball, leftPaddle, collision);
+  int hasRightPaddleCollided  = checkCustomPaddleCollision(ball, rightPaddle, collision);
   if(hasLeftPaddleCollided || hasRightPaddleCollided){
     return 1;
   }

@@ -260,9 +260,11 @@ int main(){
     mat4 ballTransformationMatrix;
     float newBallXCoord = sin(glfwGetTime());
     ball.position[0] = newBallXCoord;
-    float collidingPoint;
-    if(checkPaddleCollision(ball, leftPaddle, rightPaddle, &collidingPoint)){
+    struct Collision* paddleCollisionPtr = (struct Collision*)malloc(sizeof(struct Collision));
+    if(checkPaddleCollision(ball, leftPaddle, rightPaddle, paddleCollisionPtr)){
+      //collision with paddle
       printf("Detected collision\n");
+      printf("x: %f y: %f\n", (*paddleCollisionPtr).position[0], (*paddleCollisionPtr).position[1]);
     }
     glm_mat4_identity(ballTransformationMatrix);
     glm_translate(ballTransformationMatrix, ball.position);
