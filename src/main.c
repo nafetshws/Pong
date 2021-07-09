@@ -265,6 +265,7 @@ int main(){
       //collision with paddle
       printf("Detected collision\n");
       printf("x: %f y: %f\n", (*paddleCollisionPtr).position[0], (*paddleCollisionPtr).position[1]);
+      calculateAngleOfHit(*paddleCollisionPtr, (*paddleCollisionPtr).type == COLLISION_LEFT_PADDLE ? leftPaddle : rightPaddle);
     }
     glm_mat4_identity(ballTransformationMatrix);
     glm_translate(ballTransformationMatrix, ball.position);

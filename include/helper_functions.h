@@ -108,4 +108,10 @@ int checkPaddleCollision(struct Ball ball, struct Paddle leftPaddle, struct Padd
   return 0;
 }
 
+int calculateAngleOfHit(struct Collision collision, struct Paddle paddle){
+  //calclulate angle -> relative hit: ball - paddle
+  float angle = (-(paddle.position[1] - collision.position[1]) * (1 / (paddle.height / 2))) * 100;
+  return angle;
+}
+
 #endif
