@@ -2,15 +2,15 @@
 
 ## How to run:
 ```
-cd Pong
-mkdir build
-cd build
-make ..
-./run
+cd Pong;
+mkdir build;
+cd build;
+make ..;
+./run;
 ```
 
 ## What is this?
-This is a simple pong game written in c. You are able to play single player, against a bot or local multiplayer against one of your friends. Have fun!
+This is a simple pong game written in c. You will be able to play single player against a bot or local multiplayer against one of your friends. Have fun!
 
 ## libaries:
 - GLFW
@@ -18,4 +18,4 @@ This is a simple pong game written in c. You are able to play single player, aga
 - CGLM
  
 ## TODO
-- implement mouse movement 
+- rework movement 

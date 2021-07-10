@@ -13,7 +13,7 @@
 int WIDTH = 900;
 int HEIGHT = 900;
 
-const float movementSpeed = 5.f;
+const float movementSpeed = 1.f;
 const float BALL_RADIUS = 0.02f;
 const float PADDLE_WIDTH = 0.05f;
 const float PADDLE_HEIGHT = 0.2f;
@@ -47,7 +47,8 @@ const float lineVertices[] = {
 
 //set all callback functions
 void error_callback(int error, const char* description);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+//void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void updateInput(GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 int main(){
@@ -78,7 +79,7 @@ int main(){
     return -1;
   }
 
-  glfwSetKeyCallback(window, key_callback);
+  //glfwSetKeyCallback(window, key_callback);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetErrorCallback(error_callback);
 
@@ -238,6 +239,7 @@ int main(){
     double time = glfwGetTime();
     //glClearColor(0.2f, 02.f, 0.2f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
+    updateInput(window);
 
     //player -> left paddle
     mat4 playerTransformationMatrix;
@@ -268,7 +270,8 @@ int main(){
     struct Collision* collisionPtr = (struct Collision*)malloc(sizeof(struct Collision));
     if(checkCollision(ball, leftPaddle, rightPaddle, collisionPtr)){
       int angle = calculateAngleOfHit(*collisionPtr, (*collisionPtr).type == COLLISION_LEFT_PADDLE ? leftPaddle : rightPaddle);
-      printf("Collied with: %s\n", CollisionTypeNames[(*collisionPtr).type]);
+      printf("Hit off angle: %d\n", angle);
+      //printf("Collied with: %s\n", CollisionTypeNames[(*collisionPtr).type]);
     }
     free(collisionPtr);
     glm_mat4_identity(ballTransformationMatrix);
@@ -298,11 +301,11 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
   glViewport(0, 0, width, height);
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
-  if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
+void updateInput(GLFWwindow* window){
+  if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
     glfwSetWindowShouldClose(window, 1);
   }
-  if(key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+  if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
     if(rightPaddle.position[1] + (PADDLE_HEIGHT /2.f) < 1.f){
       if(rightPaddle.position[1] + movementSpeed*deltatime <= 1.f){
         rightPaddle.position[1] += movementSpeed * deltatime;
@@ -312,7 +315,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
       }
     }
   }
-  if(key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+  if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
     if(rightPaddle.position[1] + -(PADDLE_HEIGHT / 2.f) > -1.f){
       if(rightPaddle.position[1] - movementSpeed*deltatime >= -1.f){
         rightPaddle.position[1] -= movementSpeed * deltatime;
@@ -322,7 +325,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
       }
     }
   }
-  if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+  if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
     if(leftPaddle.position[1] + (PADDLE_HEIGHT / 2.f) < 1.f){
       if(leftPaddle.position[1] + movementSpeed*deltatime <= 1.f){
         leftPaddle.position[1] += movementSpeed * deltatime;
@@ -332,7 +335,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
       }
     }
   }
-  if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)){
+  if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
     if(leftPaddle.position[1] + -(PADDLE_HEIGHT /2.f) >= -1.f){
       if(leftPaddle.position[1] - movementSpeed*deltatime >= -1.f){
         leftPaddle.position[1] -= movementSpeed * deltatime;
