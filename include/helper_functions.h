@@ -136,6 +136,12 @@ int calculateAngleOfHit(struct Collision collision, struct Paddle paddle){
   return (int)angle;
 }
 
+float calculatePitch(int angle){
+  float negator = -(angle/-abs(angle));
+  float y = sqrt(pow(1/sinf(angle), 1) - 1);
+  return negator * y;
+}
+
 float f(float x, int angle){
   float y = sqrt((double) (pow(x / cosf(angle), 2) - pow(x, 2)));
   return y;
