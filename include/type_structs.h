@@ -9,6 +9,9 @@ const char* CollisionTypeNames[6] = {"TOP", "BOTTOM", "LEFT_PADDLE", "RIGHT_PADD
 struct Ball{
   vec3 position;
   float radius;
+  int angle;
+  float yIntersection;
+  float speed;
 };
 
 struct Paddle{

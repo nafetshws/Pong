@@ -5,6 +5,7 @@
 #include "../include/glad/glad/glad.h"
 #include "type_structs.h"
 #include <GLFW/glfw3.h> 
+#include <time.h>
 
 
 //void createShader(unsigned int* vertexShader, const char* vertexShaderSource, unsigned int* fragmentShader, const char* fragmentShaderSource);
@@ -139,6 +140,25 @@ int calculateAngleOfHit(struct Collision collision, struct Paddle paddle){
 float f(float x, int angle){
   float y = sqrt((double) (pow(x / cosf(angle), 2) - pow(x, 2)));
   return y;
+}
+
+float calcBallPosition(struct Ball ball){
+  float yValue = sqrt((double) (pow(ball.position[0] / sinf(ball.angle), 2) - pow(ball.position[0], 2))) + ball.yIntersection;
+  return yValue;
+}
+
+int genRandAngle(){
+  int lower = -30;
+  int upper = 30;
+  srand(time(0));
+  return (rand() % (upper - lower + 1)) + lower; 
+}
+
+float genRandYIntersection(){
+  int lower = -20;
+  int upper = 20;
+  //srand(time(0));
+  return (float)((rand() % (upper - lower + 1)) + lower) / 100.f; 
 }
 
 #endif
