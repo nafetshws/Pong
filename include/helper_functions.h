@@ -73,9 +73,9 @@ int checkTopBottomCollision(struct Ball ball, struct Collision* collision){
   }
 }
 
-//REWORK
 int checkWallCollision(struct Ball ball, struct Collision* collision){
-  if(ball.position[0] + ball.radius >= 1.f || ball.position[0] - ball.radius <= -1.f){
+  //if(ball.position[0] + ball.radius >= 1.f || ball.position[0] - ball.radius <= -1.f){
+  if(ball.position[0] >= 2.f || ball.position[0]<= -2.f){
     //collided with walls
     for(int i = 0; i < 3; i++){
       (*collision).position[i] = ball.position[i];
@@ -93,12 +93,12 @@ int checkCustomPaddleCollision(struct Ball ball, struct Paddle paddle, struct Co
   int isXAxisAligned = 0;
   enum CollisionType type;
   //x axis -> check if ball is overlapping paddles
-  if(paddle.left && 1.f - fabs((float)(ball.position[0] - ball.radius)) <= paddle.width){
+  if(paddle.left && 1.f - fabs((float)(ball.position[0] - ball.radius)) <= paddle.width && 1.f - fabs((float)(ball.position[0] - ball.radius)) >= -0.1){
       //left paddle
       isXAxisAligned = 1;
       (*collision).type = COLLISION_LEFT_PADDLE;
   }
-  else if(!paddle.left && 1.f - (ball.position[0] + ball.radius) <= paddle.width){
+  else if(!paddle.left && 1.f - (ball.position[0] + ball.radius) <= paddle.width && 1.f - (ball.position[0] + ball.radius) >= -0.1){
       //right paddle
       isXAxisAligned = 1;
       (*collision).type = COLLISION_RIGHT_PADDLE;

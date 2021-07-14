@@ -18,8 +18,10 @@ const float BALL_RADIUS = 0.02f;
 const float PADDLE_WIDTH = 0.05f;
 const float PADDLE_HEIGHT = 0.2f;
 float deltatime = 0.f;
+float deltaTimeX = 0.f;
+float lastBallXpos = 0.f;
 float lastFrame = 0.f;
-const float BALL_SPEED = 0.5f;
+const float BALL_SPEED = 1.f;
 
 float newPlayerYCoord = 0.5f;
 float newEnemyYCoord = 0.5f;
@@ -245,6 +247,8 @@ int main(){
   while(!glfwWindowShouldClose(window)){
     float currentFrame = (float)glfwGetTime();
     deltatime = currentFrame - lastFrame;
+    deltaTimeX = (float)fabs((float)1/(ball.position[0] - lastBallXpos));
+    lastBallXpos = ball.position[1];
     lastFrame = currentFrame;
     //render
     double time = glfwGetTime();
@@ -278,10 +282,10 @@ int main(){
     mat4 ballTransformationMatrix;
     struct Collision* collisionPtr = (struct Collision*)malloc(sizeof(struct Collision));
     if(checkCollision(ball, leftPaddle, rightPaddle, collisionPtr)){
+      printf("Collision: %s\n", CollisionTypeNames[(*collisionPtr).type]);
       if((*collisionPtr).type == COLLISION_LEFT_PADDLE || (*collisionPtr).type == COLLISION_RIGHT_PADDLE){
         //paddle hit
         float angle = calculateAngleOfHit(*collisionPtr, (*collisionPtr).type == COLLISION_LEFT_PADDLE ? leftPaddle : rightPaddle);
-        printf("New angle: %f\n", glm_deg(angle));
         ball.speed = -ball.speed;
         ball.angle = angle;
         ball.pitch = calculatePitch(angle, (*collisionPtr));
@@ -289,9 +293,13 @@ int main(){
       }
       else if((*collisionPtr).type == COLLISION_RIGHT_WALL || (*collisionPtr).type == COLLISION_LEFT_WALL){
         //respawn
+
         ball.position[0] = 0.f;
         ball.position[1] = genRandYIntersection();
+        ball.yIntersection = ball.position[1]; 
         ball.angle = genRandAngle();
+        ball.pitch = calculatePitch(ball.angle, emptyCollision);
+        ball.speed = -ball.speed;
       }
       else{
         //ceiling or floor hit
