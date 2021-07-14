@@ -84,11 +84,14 @@ int main(){
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetErrorCallback(error_callback);
 
+  struct Collision emptyCollision;
+  emptyCollision.type = COLLISION_NONE;
+
   ball.radius = BALL_RADIUS;
   ball.angle = genRandAngle();
-  printf("Angle: %d\n", ball.angle);
   ball.yIntersection = genRandYIntersection();
   ball.speed = BALL_SPEED;
+  ball.pitch = calculatePitch(ball.angle, emptyCollision);
 
   vec3 ballPos = {0.f, ball.yIntersection, 0.f};
   for(int i = 0; i < 3; i++){
@@ -237,6 +240,8 @@ int main(){
   float lastAngle;
   float x = 1.f;
 
+  int canBounce = 1;
+
   while(!glfwWindowShouldClose(window)){
     float currentFrame = (float)glfwGetTime();
     deltatime = currentFrame - lastFrame;
@@ -271,15 +276,16 @@ int main(){
     glUseProgram(ballProgram);
     glBindVertexArray(ballVAO);
     mat4 ballTransformationMatrix;
-    //float newBallXCoord = sin(glfwGetTime());
-    //ball.position[0] = newBallXCoord;
     struct Collision* collisionPtr = (struct Collision*)malloc(sizeof(struct Collision));
     if(checkCollision(ball, leftPaddle, rightPaddle, collisionPtr)){
       if((*collisionPtr).type == COLLISION_LEFT_PADDLE || (*collisionPtr).type == COLLISION_RIGHT_PADDLE){
         //paddle hit
-        int angle = calculateAngleOfHit(*collisionPtr, (*collisionPtr).type == COLLISION_LEFT_PADDLE ? leftPaddle : rightPaddle);
+        float angle = calculateAngleOfHit(*collisionPtr, (*collisionPtr).type == COLLISION_LEFT_PADDLE ? leftPaddle : rightPaddle);
+        printf("New angle: %f\n", glm_deg(angle));
         ball.speed = -ball.speed;
         ball.angle = angle;
+        ball.pitch = calculatePitch(angle, (*collisionPtr));
+        ball.yIntersection = calculateYIntersection(ball.pitch, (*collisionPtr));
       }
       else if((*collisionPtr).type == COLLISION_RIGHT_WALL || (*collisionPtr).type == COLLISION_LEFT_WALL){
         //respawn
@@ -287,14 +293,32 @@ int main(){
         ball.position[1] = genRandYIntersection();
         ball.angle = genRandAngle();
       }
+      else{
+        //ceiling or floor hit
+        if((*collisionPtr).type == COLLISION_TOP){
+          ball.pitch = ball.speed > 0 ? (float)-fabs((double)ball.pitch) : (float) fabs((float)ball.pitch);
+        }
+        else{
+          ball.pitch = ball.speed > 0 ? (float)fabs((double)ball.pitch) : (float)-fabs((double)ball.pitch);
+        }
+        if(canBounce == 1){
+          ball.yIntersection = calculateYIntersection(ball.pitch, (*collisionPtr));
+          canBounce = 0;
+        }
+      }
+    }
+    else{
+      canBounce = 1;
     }
     free(collisionPtr);
     glm_mat4_identity(ballTransformationMatrix);
-    ball.position[1] = calcBallPosition(ball);
+    //calculate new y position
+    ball.position[1] = f(ball.position[0], ball.pitch, ball.yIntersection);
     glm_translate(ballTransformationMatrix, ball.position);
     unsigned int ballLocation = glGetUniformLocation(ballProgram, "transformation");
     glUniformMatrix4fv(ballLocation, 1, GL_FALSE, *ballTransformationMatrix);;
     glDrawArrays(GL_TRIANGLE_FAN, 0, 360);
+    //incr x position
     ball.position[0] += ball.speed * deltatime; 
 
     glUseProgram(lineProgram);

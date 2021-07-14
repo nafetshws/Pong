@@ -131,21 +131,39 @@ int checkCollision(struct Ball ball, struct Paddle leftPaddle, struct Paddle rig
   return 0;
 }
 
-int calculateAngleOfHit(struct Collision collision, struct Paddle paddle){
+float calculateAngleOfHit(struct Collision collision, struct Paddle paddle){
   //calclulate angle -> relative hit: ball - paddle
-  float angle = (-(paddle.position[1] - collision.position[1]) * (1 / (paddle.height / 2))) * 100;
-  return (int)angle;
+  float angle = (-(paddle.position[1] - collision.position[1]) * (1 / (paddle.height / 2))) * 75;
+  return glm_rad(angle);
 }
 
-float calculatePitch(int angle){
-  float negator = -(angle/-abs(angle));
-  float y = sqrt(pow(1/sinf(angle), 1) - 1);
-  return negator * y;
+float calculatePitch(float angle, struct Collision collision){
+  if(collision.type == COLLISION_NONE){
+    float negator = (float)-(angle/-fabs((double)angle));
+    float power = pow((double)(1.f/sinf(angle)), 2);
+    float pitch = sqrt(power - 1);
+    pitch *= negator;
+    return pitch; 
+  }
+  else if(collision.type == COLLISION_RIGHT_PADDLE || collision.type == COLLISION_LEFT_PADDLE){
+    float height = (double) fabs((double)(glm_deg(angle) > 0.f ? 1.f - collision.position[1] : -1.f - collision.position[1]));
+    float width = (height / tanf(angle)); 
+    float pitch = collision.type == COLLISION_RIGHT_PADDLE ? -(height / width) : (height / width);
+    return pitch;
+  } 
+
 }
 
-float f(float x, int angle){
-  float y = sqrt((double) (pow(x / cosf(angle), 2) - pow(x, 2)));
-  return y;
+float calculateYIntersection(float pitch, struct Collision collision){
+  float yIntersection = collision.position[1] - (pitch * collision.position[0]);
+  return yIntersection; 
+}
+
+float f(float x, float a, float b){
+  float y = a*x +b;
+  //printf("A: %f x: %f b: %f\n", a, x, b);
+  //printf("Next value: %f\n", y);
+  return a*x + b;
 }
 
 float calcBallPosition(struct Ball ball){
@@ -153,18 +171,25 @@ float calcBallPosition(struct Ball ball){
   return yValue;
 }
 
-int genRandAngle(){
-  int lower = -30;
-  int upper = 30;
-  srand(time(0));
-  return (rand() % (upper - lower + 1)) + lower; 
+float genRandAngle(){
+  int lowerPos = 90;
+  int upperPos = 110;
+  int lowerNeg = -110;
+  int upperNeg = -90;
+  srand(time(NULL));
+  float randPos = (float)((rand() % (upperPos - lowerPos + 1)) + lowerPos); 
+  float randNeg = (float)((rand() % (upperNeg - lowerNeg + 1)) + lowerNeg); 
+  srand(time(NULL)/2);
+  int rnd = rand();
+  return (rnd > RAND_MAX/2) ? glm_rad(randPos) : glm_rad(randNeg); 
 }
 
 float genRandYIntersection(){
-  int lower = -20;
-  int upper = 20;
-  //srand(time(0));
-  return (float)((rand() % (upper - lower + 1)) + lower) / 100.f; 
+  int lower = -30;
+  int upper = 30;
+  srand(time(NULL));
+  float random = (float)((rand() % (upper - lower + 1)) + lower) / 100.f; 
+  return random;
 }
 
 #endif
