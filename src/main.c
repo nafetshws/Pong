@@ -8,6 +8,8 @@
 #include "../shaders/playerShader.h"
 #include "../shaders/ballShader.h"
 #include "../shaders/lineShader.h"
+#include <../ft2build.h>
+#include FT_FREETYPE_H
 
 //consts
 int WIDTH = 900;
@@ -81,6 +83,19 @@ int main(){
     printf("Failed to init glad\n");
     return -1;
   }
+
+  //Freetype
+  FT_Library ft;
+  FT_Face face;
+  if(FT_Init_FreeType(&ft)){
+    printf("Failed to init freetype\n");
+    return -1;
+  }
+  if(FT_New_Face(ft, "../res/fonts/OpenSans/OpenSans-Bold.ttf", 0, &face)){
+    printf("Failed to load open sans font\n");
+    return -1;
+  }
+
 
   //glfwSetKeyCallback(window, key_callback);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -282,7 +297,6 @@ int main(){
     mat4 ballTransformationMatrix;
     struct Collision* collisionPtr = (struct Collision*)malloc(sizeof(struct Collision));
     if(checkCollision(ball, leftPaddle, rightPaddle, collisionPtr)){
-      printf("Collision: %s\n", CollisionTypeNames[(*collisionPtr).type]);
       if((*collisionPtr).type == COLLISION_LEFT_PADDLE || (*collisionPtr).type == COLLISION_RIGHT_PADDLE){
         //paddle hit
         float angle = calculateAngleOfHit(*collisionPtr, (*collisionPtr).type == COLLISION_LEFT_PADDLE ? leftPaddle : rightPaddle);
