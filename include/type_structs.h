@@ -28,4 +28,23 @@ struct Collision{
   enum CollisionType type;
 };
 
+struct Character{
+  unsigned int textureId;
+  vec2 size;
+  vec2 bearing;
+  unsigned int advance;
+};
+
+struct map{
+  char* key;
+  struct Character character;
+};
+
+struct ListMap;
+
+bool listMapInsert(struct ListMap* map, char key, struct Character character);
+struct Character listMapGetValue(struct ListMap* map, char key);
+struct ListMap* newListMap();
+void freeListMap(struct ListMap* listMap);
+
 #endif

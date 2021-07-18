@@ -8,7 +8,8 @@
 #include "../shaders/playerShader.h"
 #include "../shaders/ballShader.h"
 #include "../shaders/lineShader.h"
-#include <../ft2build.h>
+#include "../shaders/glyphShader.h"
+#include <ft2build.h>
 #include FT_FREETYPE_H
 
 //consts
@@ -91,11 +92,58 @@ int main(){
     printf("Failed to init freetype\n");
     return -1;
   }
-  if(FT_New_Face(ft, "../res/fonts/OpenSans/OpenSans-Bold.ttf", 0, &face)){
+  if(FT_New_Face(ft, "res/fonts/OpenSans/OpenSans-Bold.ttf", 0, &face)){
     printf("Failed to load open sans font\n");
     return -1;
   }
 
+  FT_Set_Pixel_Sizes(face, 0, 48);
+  if(FT_LOAD_Char(face, "X", FT_LOAD_RENDER)){
+    printf("Failed to load glyph\n");
+    return -1;
+  }
+
+  int amountOfChars = 128;
+  //struct map* characterMap = malloc(sizeof(struct map) * amountOfChars);
+  struct ListMap* charMap = newListMap();
+
+  //if(characterMap == NULL){
+  //  printf("Error when creating struct map\n");
+  //  return -1;
+  //}
+  
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  for(unsigned char c = 0; c < amountOfChars; c++){
+    if(FT_Load_Char(face, c, FT_LOAD_RENDER)){
+      printf("Failed to load char\n");
+      continue;
+    }
+    //gen texture
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    struct Character character;
+    character.textureId = texture;
+    character.size[0] = (float) face->glyph->bitmap.width;
+    character.size[1] = (float) face->glyph->bitmap.rows;
+    character.bearing[0] = (float) face->glyph->bitmap_left;
+    character.bearing[1] = (float) face->glyph->bitmap_top;
+    character.advance = face->glyph->advance.x;
+
+    listMapInsert(charMap, c, character);
+  }
+
+  //clear memory
+  //free(characterMap);
+  FT_Done_Face(face);
+  FT_Done_FreeType(ft);
 
   //glfwSetKeyCallback(window, key_callback);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -135,16 +183,19 @@ int main(){
   unsigned int playerVertexShader, playerFragmentShader;
   unsigned int ballVertexShader, ballFragmentShader;
   unsigned int lineVertexShader, lineFragmentShader;
+  unsigned int scoreVertexShader, scoreFragmentShader;
   createShader(&playerVertexShader, playerVertexShaderSource, &playerFragmentShader, playerFragmentShaderSource);
   createShader(&ballVertexShader, ballVertexShaderSource, &ballFragmentShader, ballFragmentShaderSource);
   createShader(&lineVertexShader, lineVertexShaderSource, &lineFragmentShader, lineFragmentShaderSource);
+  createShader(&scoreVertexShader, glyphVertexShaderSource, &scoreFragmentShader, glyphFragmentShaderSource);
   
   //create program
   int success;
-  unsigned int playerProgram, ballProgram, lineProgram;
+  unsigned int playerProgram, ballProgram, lineProgram, scoreProgram;
   playerProgram = glCreateProgram();
   ballProgram = glCreateProgram();
   lineProgram = glCreateProgram();
+  scoreProgram = glCreateProgram();
 
   //player
   glAttachShader(playerProgram, playerVertexShader);
@@ -155,10 +206,15 @@ int main(){
   //line
   glAttachShader(lineProgram, lineVertexShader);
   glAttachShader(lineProgram, lineFragmentShader);
-  //link
+  //score
+  glAttachShader(scoreProgram, scoreVertexShader);
+  glAttachShader(scoreProgram, scoreFragmentShader);
+
+  //linking
   glLinkProgram(playerProgram);
   glLinkProgram(ballProgram);
   glLinkProgram(lineProgram);
+  glLinkProgram(scoreProgram);
 
   glGetProgramiv(playerProgram, GL_LINK_STATUS, &success);
   if(!success){
@@ -184,8 +240,25 @@ int main(){
     printf("Linking error: %s\n", message);
   }
 
-  //create circle
+  glGetProgramiv(scoreProgram, GL_LINK_STATUS, &success);
+  if(!success){
+    char message[1024];
+    int length = 0;
+    glGetProgramInfoLog(scoreProgram, 1024, &length, message);
+    printf("Linking error: %s\n", message);
+  }
 
+  //delete shaders
+  glDeleteShader(playerVertexShader);
+  glDeleteShader(playerFragmentShader);
+  glDeleteShader(ballVertexShader);
+  glDeleteShader(ballFragmentShader);
+  glDeleteShader(lineVertexShader);
+  glDeleteShader(lineFragmentShader);
+  glDeleteShader(scoreVertexShader);
+  glDeleteShader(scoreFragmentShader);
+
+  //create circle
   float circleVertices[360][3];
   float realCircleVertices[360*3];
   createCircleVertices(0.0f, 0.0f, BALL_RADIUS, 360, circleVertices);
@@ -197,14 +270,6 @@ int main(){
     }
   }
 
-  //delete shaders
-  glDeleteShader(playerVertexShader);
-  glDeleteShader(playerFragmentShader);
-  glDeleteShader(ballVertexShader);
-  glDeleteShader(ballFragmentShader);
-  glDeleteShader(lineVertexShader);
-  glDeleteShader(lineFragmentShader);
-
   //player
   unsigned int playerVBO, playerVAO;
   //enemy
@@ -213,12 +278,16 @@ int main(){
   unsigned int ballVBO, ballVAO;
   //middle line
   unsigned int lineVBO, lineVAO;
+  //score
+  unsigned int scoreVBO, scoreVAO; 
 
   glGenVertexArrays(1, &playerVAO);
   glGenVertexArrays(1, &enemyVAO);
   glGenVertexArrays(1, &ballVAO);
   glGenVertexArrays(1, &lineVAO);
+  glGenVertexArrays(1, &scoreVAO);
 
+  //player
   glBindVertexArray(playerVAO);
   glGenBuffers(1, &playerVBO);
   glBindBuffer(GL_ARRAY_BUFFER, playerVBO);
@@ -227,6 +296,7 @@ int main(){
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
+  //enemy
   glBindVertexArray(enemyVAO);
   glGenBuffers(1, &enemyVBO);
   glBindBuffer(GL_ARRAY_BUFFER, enemyVBO);
@@ -235,6 +305,7 @@ int main(){
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
   glEnableVertexAttribArray(0);
 
+  //ball
   glBindVertexArray(ballVAO);
   glGenBuffers(1, &ballVBO);
   glBindBuffer(GL_ARRAY_BUFFER, ballVBO);
@@ -243,12 +314,22 @@ int main(){
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
+  //line
   glBindVertexArray(lineVAO);
   glGenBuffers(1, &lineVBO);
   glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(lineVertices), lineVertices, GL_STATIC_DRAW);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
+
+  //score
+  glBindVertexArray(scoreVAO);
+  glGenBuffers(1, &scoreVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, scoreVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float)*6*4, NULL, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4* sizeof(float), 0);
   glEnableVertexAttribArray(0);
 
   glBindVertexArray(0);
@@ -343,11 +424,51 @@ int main(){
     //incr x position
     ball.position[0] += ball.speed * deltatime; 
 
+    //middle line
     glUseProgram(lineProgram);
     glBindVertexArray(lineVAO);
     glDrawArrays(GL_LINES, 0, 2);
 
+    //render score
+    vec3 color = {0.f, 1.f, 0.f};
+    float scale = 1.f;
+    float x = 300.f;
+    float y = 300.f;
+    const char* text = "Hello world";
+    glUseProgram(scoreProgram);
+    glUniform3f(glGetUniformLocation(scoreProgram, "textColor"), color[0], color[1], color[2]);
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(scoreVAO);
+    int length = (int) sizeof(text) / sizeof(char);
+    for(int i = 0; i < length; i++){
+      struct Character ch = listMapGetValue(charMap, text[i]) ;
+      float xpos = x + ch.bearing[0] * scale; 
+      float ypos = y - (ch.size[1] - ch.bearing[1]) * scale;
+
+      float w = ch.size[0] * scale;
+      float h = ch.size[1] * scale;
+
+      float vertices[6][4] = {
+        { xpos,     ypos + h,   0.0f, 0.0f },            
+        { xpos,     ypos,       0.0f, 1.0f },
+        { xpos + w, ypos,       1.0f, 1.0f },
+
+        { xpos,     ypos + h,   0.0f, 0.0f },
+        { xpos + w, ypos,       1.0f, 1.0f },
+        { xpos + w, ypos + h,   1.0f, 0.0f }           
+      };
+
+      glBindTexture(GL_TEXTURE_2D, ch.textureId);
+      glBindBuffer(GL_ARRAY_BUFFER, scoreVBO);
+      glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      glDrawArrays(GL_TRIANGLES, 0, 6);
+      x += (ch.advance >> 6) * scale;
+    }
+    
+
     glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
 
     glfwSwapInterval(1);
@@ -355,6 +476,7 @@ int main(){
     glfwPollEvents();
   }
 
+  //free(characterMap);
   glfwTerminate();
 
   return 0;
