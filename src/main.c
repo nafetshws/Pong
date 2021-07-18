@@ -104,16 +104,11 @@ int main(){
   //}
 
   int amountOfChars = 128;
-  //struct map* characterMap = malloc(sizeof(struct map) * amountOfChars);
   struct ListMap* charMap = newListMap();
 
-  //if(characterMap == NULL){
-  //  printf("Error when creating struct map\n");
-  //  return -1;
-  //}
-  
+  FT_Set_Pixel_Sizes(face, 0, 48);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  for(unsigned long c = 0; c < amountOfChars; c++){
+  for(unsigned char c = 0; c < amountOfChars; c++){
     if(FT_Load_Char(face, c, FT_LOAD_RENDER)){
       printf("Failed to load char\n");
       continue;
