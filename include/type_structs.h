@@ -37,32 +37,34 @@ struct Character{
 };
 
 struct map{
-  char* key;
+  char key;
   struct Character character;
 };
 
 struct ListMap{
-  struct map map[MAX_CAPACITY];
+  struct map map[30];
   size_t count;
-}
+};
 
 struct ListMap* newListMap(){
   struct ListMap* ret = calloc(1, sizeof(struct ListMap));
   ret->count = 0;
   return ret;
 }
+
 int listMapInsert(struct ListMap* listMap, char key, struct Character character){
   if(listMap->count == MAX_CAPACITY){
     return 1;
   }
-  listMap->map[listMap->count].key = key;
+  //listMap->map[listMap->count].key = key;
+  (*listMap).map[(*listMap).count].key = key;
   listMap->map[listMap->count].character = character;
   listMap->count++;
   return 0;
 }
 struct Character listMapGetValue(struct ListMap* listMap, char key){
-  struct Character character = NULL;
-  for(size_t i = 0; i < listMap->count && character == NULL; i++){
+  struct Character character; 
+  for(size_t i = 0; i < listMap->count && !character.textureId; i++){
     if(listMap->map->key == key){
       character = listMap->map->character;
     }
@@ -73,9 +75,6 @@ struct Character listMapGetValue(struct ListMap* listMap, char key){
 void freeListMap(struct ListMap* listMap){
   if(listMap == NULL){
     return;
-  }
-  for(size_t i = 0; i < listMap->count; i++){
-    free(listMap->map[i]);
   }
   free(listMap);
 }
