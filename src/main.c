@@ -425,7 +425,7 @@ int main(){
     glDrawArrays(GL_LINES, 0, 2);
 
     //render score
-    vec3 color = {0.f, 1.f, 0.f};
+    vec3 color = {0.5f, 0.5f, 0.3f};
     float scale = 1.f;
     float x = 300.f;
     float y = 300.f;
@@ -460,7 +460,6 @@ int main(){
       glDrawArrays(GL_TRIANGLES, 0, 6);
       x += (ch.advance >> 6) * scale;
     }
-    
 
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
