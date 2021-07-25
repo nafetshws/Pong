@@ -431,10 +431,10 @@ int main(){
     glDrawArrays(GL_LINES, 0, 2);
 
     //render score
-    vec3 color = {0.f, 0.f, 1.f};
+    vec3 color = {1.f, 0.f, 0.f};
     float scale = 0.002f;
-    float x = 0.2f;
-    float y = 0.2f;
+    float x = 0.1f;
+    float y = 0.8f;
 
     //state for text rendering
     //TODO fix right paddle with this option
@@ -447,8 +447,8 @@ int main(){
     glBindVertexArray(scoreVAO);
     mat4 projection;
     glm_mat4_identity(projection);
-    //glm_ortho(0.f, (float)WIDTH, 0.f, (float)HEIGHT, 0.1f, 100.f, projection);
     glUniformMatrix4fv(glGetUniformLocation(scoreProgram, "projection"), 1, GL_FALSE, * projection); 
+
     renderText(scoreProgram, scoreVAO, scoreVBO, text, x, y, scale, color, charMap);
 
     glUseProgram(0);

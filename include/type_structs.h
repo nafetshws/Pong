@@ -65,11 +65,9 @@ struct Character listMapGetValue(struct ListMap* listMap, int key){
   for(int i = 0; i < (*listMap).count; i++){
     if((*listMap).map[i].key == key){
       struct Character character = (*listMap).map[i].character; 
-      printf("found character\n");
       return character;
     }
   }
-  printf("finished for loop\n");
 }
 void freeListMap(struct ListMap* listMap){
   if(listMap == NULL){

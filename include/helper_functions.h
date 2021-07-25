@@ -6,6 +6,7 @@
 #include "type_structs.h"
 #include <GLFW/glfw3.h> 
 #include <time.h>
+#include <string.h>
 
 
 //void createShader(unsigned int* vertexShader, const char* vertexShaderSource, unsigned int* fragmentShader, const char* fragmentShaderSource);
@@ -199,12 +200,10 @@ void renderText(uint programId, uint VAO, uint VBO, const char* text, float x, f
   glActiveTexture(GL_TEXTURE0);
   glBindVertexArray(VAO);
 
-  int length = (int) sizeof(text) / sizeof(char);
+  int length = strlen(text); 
   for(int i = 0; i < length; i++){
     struct Character ch = listMapGetValue(charMap, text[i]) ;
     float xpos = x + ch.bearing[0] * scale; 
-    printf("length: %d\n", length);
-    printf("xpos (%d): %f\n", i, xpos);
     float ypos = y - (ch.size[1] - ch.bearing[1]) * scale;
 
     float w = ch.size[0] * scale;
