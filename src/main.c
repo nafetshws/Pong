@@ -437,12 +437,10 @@ int main(){
     float y = 0.8f;
 
     //state for text rendering
-    //TODO fix right paddle with this option
-    //glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    const char* text = "hello world";
+    const char* text = "dies ist ein test";
     glUseProgram(scoreProgram);
     glBindVertexArray(scoreVAO);
     mat4 projection;

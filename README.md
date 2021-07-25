@@ -1,12 +1,17 @@
 # Pong
 
 ## How to run:
+### Linux
 ```
 cd Pong;
-mkdir build;
-cd build;
-make ..;
+make;
 ./run;
+```
+### Windows
+```
+cd Pong;
+make windows;
+./run
 ```
 
 ## What is this?
@@ -16,6 +21,3 @@ This is a simple pong game written in c. You will be able to play single player 
 - GLFW
 - GLAD
 - CGLM
- 
-## TODO
-- rework movement 
