@@ -194,7 +194,7 @@ float genRandYIntersection(){
   return random;
 }
 
-void renderText(size_t programId, size_t VAO, size_t VBO, const char* text, float x, float y, float scale, vec3 color, struct ListMap* charMap){
+void renderText(uint programId, uint VAO, uint VBO, const char* text, float x, float y, float scale, vec3 color, struct ListMap* charMap){
   glUseProgram(programId);
   glUniform3f(glGetUniformLocation(programId, "textColor"), color[0], color[1], color[2]);
   glActiveTexture(GL_TEXTURE0);
