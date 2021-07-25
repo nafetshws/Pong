@@ -17,6 +17,7 @@
 //int checkPaddleCollision(struct Ball ball, struct Paddle leftPaddle, struct Paddle rightPaddle, struct Collision* collision);
 //int calculateAngleOfHit(struct Collision collision, struct Paddle paddle);
 //float f(float x, int angle);
+void inspectChar(struct Character character);
 
 void createShader(unsigned int* vertexShader, const char* vertexShaderSource, unsigned int* fragmentShader, const char* fragmentShaderSource){
   int success;
@@ -190,6 +191,54 @@ float genRandYIntersection(){
   srand(time(NULL));
   float random = (float)((rand() % (upper - lower + 1)) + lower) / 100.f; 
   return random;
+}
+
+void renderText(uint programId, uint VAO, uint VBO, const char* text, float x, float y, float scale, vec3 color, struct ListMap* charMap){
+  glUseProgram(programId);
+  glUniform3f(glGetUniformLocation(programId, "textColor"), color[0], color[1], color[2]);
+  glActiveTexture(GL_TEXTURE0);
+  glBindVertexArray(VAO);
+
+  int length = (int) sizeof(text) / sizeof(char);
+  for(int i = 0; i < length; i++){
+    struct Character ch = listMapGetValue(charMap, text[i]) ;
+    float xpos = x + ch.bearing[0] * scale; 
+    printf("length: %d\n", length);
+    printf("xpos (%d): %f\n", i, xpos);
+    float ypos = y - (ch.size[1] - ch.bearing[1]) * scale;
+
+    float w = ch.size[0] * scale;
+    float h = ch.size[1] * scale;
+
+    float vertices[6][4] = {
+      { xpos,     ypos + h,   0.0f, 0.0f },            
+      { xpos,     ypos,       0.0f, 1.0f },
+      { xpos + w, ypos,       1.0f, 1.0f },
+
+      { xpos,     ypos + h,   0.0f, 0.0f },
+      { xpos + w, ypos,       1.0f, 1.0f },
+      { xpos + w, ypos + h,   1.0f, 0.0f }           
+    };
+    
+    //print vertices
+    //printf("advance: %f\n", ch.advance);
+
+    glBindTexture(GL_TEXTURE_2D, ch.textureId);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    x += (ch.advance >> 6) * scale;
+  }
+
+  glBindVertexArray(0);
+  glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void inspectChar(struct Character character){
+  printf("Size: width: %d height: %d\n", character.size[0], character.size[1]);
+  printf("bearing: width: %d height: %d\n", character.bearing[0], character.bearing[1]);
+  printf("Advance: x: %d\n", character.advance);
 }
 
 #endif

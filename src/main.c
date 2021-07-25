@@ -97,11 +97,8 @@ int main(){
     return -1;
   }
 
-  //FT_Set_Pixel_Sizes(face, 0, 48);
-  //if(FT_LOAD_Char(face, "X", FT_LOAD_RENDER)){
-  //  printf("Failed to load glyph\n");
-  //  return -1;
-  //}
+  //const char* testString = "Hello world";
+  //printf("Test char: %c\n", testString[2]);
 
   int amountOfChars = 128;
   struct ListMap* charMap = newListMap();
@@ -126,14 +123,23 @@ int main(){
 
     struct Character character;
     character.textureId = texture;
-    character.size[0] = (float) face->glyph->bitmap.width;
-    character.size[1] = (float) face->glyph->bitmap.rows;
-    character.bearing[0] = (float) face->glyph->bitmap_left;
-    character.bearing[1] = (float) face->glyph->bitmap_top;
+    character.size[0] = face->glyph->bitmap.width;
+    character.size[1] = face->glyph->bitmap.rows;
+    character.bearing[0] = face->glyph->bitmap_left;
+    character.bearing[1] = face->glyph->bitmap_top;
     character.advance = face->glyph->advance.x;
 
     listMapInsert(charMap, c, character);
   }
+  
+  //const char * dWord = "dein";
+  //struct Character ch = listMapGetValue(charMap, dWord[0]);
+  //printf("After ----------------------------------\n");
+  //inspectChar(ch);
+
+  //exit(EXIT_FAILURE);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
 
   //clear memory
   //free(characterMap);
@@ -425,44 +431,26 @@ int main(){
     glDrawArrays(GL_LINES, 0, 2);
 
     //render score
-    vec3 color = {0.5f, 0.5f, 0.3f};
-    float scale = 1.f;
-    float x = 300.f;
-    float y = 300.f;
-    const char* text = "Hello world";
+    vec3 color = {0.f, 0.f, 1.f};
+    float scale = 0.002f;
+    float x = 0.2f;
+    float y = 0.2f;
+
+    //state for text rendering
+    //TODO fix right paddle with this option
+    //glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    const char* text = "hello world";
     glUseProgram(scoreProgram);
-    glUniform3f(glGetUniformLocation(scoreProgram, "textColor"), color[0], color[1], color[2]);
-    glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(scoreVAO);
-    int length = (int) sizeof(text) / sizeof(char);
-    for(int i = 0; i < length; i++){
-      struct Character ch = listMapGetValue(charMap, text[i]) ;
-      float xpos = x + ch.bearing[0] * scale; 
-      float ypos = y - (ch.size[1] - ch.bearing[1]) * scale;
+    mat4 projection;
+    glm_mat4_identity(projection);
+    //glm_ortho(0.f, (float)WIDTH, 0.f, (float)HEIGHT, 0.1f, 100.f, projection);
+    glUniformMatrix4fv(glGetUniformLocation(scoreProgram, "projection"), 1, GL_FALSE, * projection); 
+    renderText(scoreProgram, scoreVAO, scoreVBO, text, x, y, scale, color, charMap);
 
-      float w = ch.size[0] * scale;
-      float h = ch.size[1] * scale;
-
-      float vertices[6][4] = {
-        { xpos,     ypos + h,   0.0f, 0.0f },            
-        { xpos,     ypos,       0.0f, 1.0f },
-        { xpos + w, ypos,       1.0f, 1.0f },
-
-        { xpos,     ypos + h,   0.0f, 0.0f },
-        { xpos + w, ypos,       1.0f, 1.0f },
-        { xpos + w, ypos + h,   1.0f, 0.0f }           
-      };
-
-      glBindTexture(GL_TEXTURE_2D, ch.textureId);
-      glBindBuffer(GL_ARRAY_BUFFER, scoreVBO);
-      glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      glDrawArrays(GL_TRIANGLES, 0, 6);
-      x += (ch.advance >> 6) * scale;
-    }
-
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
 
     glfwSwapInterval(1);
