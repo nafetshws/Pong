@@ -17,6 +17,10 @@
 int WIDTH = 900;
 int HEIGHT = 900;
 
+const float fontScale = 0.002f;
+vec3 fontColor = {1.f, 0.f, 0.f};
+vec3 fontColorVictory = {0.f, 1.f, 0.f};
+
 const float movementSpeed = 1.f;
 const float BALL_RADIUS = 0.02f;
 const float PADDLE_WIDTH = 0.05f;
@@ -63,6 +67,7 @@ int canBounce = 1;
 //set all callback functions
 void error_callback(int error, const char* description);
 void updateInput(GLFWwindow* window);
+void process_input_winner(GLFWwindow* window, struct GameState* gameState);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 int main(){
@@ -109,7 +114,7 @@ int main(){
   struct ListMap* charMap = newListMap();
 
   //load chars
-  FT_Set_Pixel_Sizes(face, 0, 48);
+  FT_Set_Pixel_Sizes(face, 0, 40);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   for(unsigned char c = 0; c < amountOfChars; c++){
     if(FT_Load_Char(face, c, FT_LOAD_RENDER)){
@@ -361,88 +366,115 @@ int main(){
 
     //------------------Render objects---------------------
     //player -> left paddle
-    mat4 playerTransformationMatrix;
-    glm_mat4_identity(playerTransformationMatrix);
-    glm_translate(playerTransformationMatrix, leftPaddle.position);
-    unsigned int playerTransformLocation = glGetUniformLocation(playerProgram, "playerTransform");
-    glUseProgram(playerProgram);
-    glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *playerTransformationMatrix);
+    if(winner){        
+      //state for text rendering
+      process_input_winner(window, &gameState);
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glBindVertexArray(playerVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+      //convert score (int to string)
+      const char* playerOneWonString = "Spieler 1 hat gewonnen";
+      const char* playerTwoWonString = "Spieler 2 hat gewonnen";
+      
+      float playerOneX = -0.97f;
+      float playerTwoX= 0.04;
+      float playerOneTwoY = 0.f;
 
-    //enemy -> right paddle
-    mat4 enemyTransformationMatrix;
-    glm_mat4_identity(enemyTransformationMatrix);
-    glm_translate(enemyTransformationMatrix, rightPaddle.position);
-    glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *enemyTransformationMatrix);
+      glUseProgram(scoreProgram);
+      glBindVertexArray(scoreVAO);
+      mat4 projection;
+      glm_mat4_identity(projection);
+      glUniformMatrix4fv(glGetUniformLocation(scoreProgram, "projection"), 1, GL_FALSE, * projection); 
 
-    glBindVertexArray(enemyVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    //draw ball
-    glUseProgram(ballProgram);
-    glBindVertexArray(ballVAO);
-    mat4 ballTransformationMatrix;
-    struct Collision* collisionPtr = (struct Collision*)malloc(sizeof(struct Collision));
-    if(checkCollision(ball, leftPaddle, rightPaddle, collisionPtr)){
-      if((*collisionPtr).type == COLLISION_LEFT_PADDLE || (*collisionPtr).type == COLLISION_RIGHT_PADDLE){
-        //paddle hit
-        float angle = calculateAngleOfHit(*collisionPtr, (*collisionPtr).type == COLLISION_LEFT_PADDLE ? leftPaddle : rightPaddle);
-        ball.speed = -ball.speed;
-        ball.angle = angle;
-        ball.pitch = calculatePitch(angle, (*collisionPtr));
-        ball.yIntersection = calculateYIntersection(ball.pitch, (*collisionPtr));
+      if(winner == 1){
+        renderText(scoreProgram, scoreVAO, scoreVBO, playerOneWonString, playerOneX, playerOneTwoY, fontScale, fontColorVictory, charMap);
       }
-      else if((*collisionPtr).type == COLLISION_RIGHT_WALL || (*collisionPtr).type == COLLISION_LEFT_WALL){
-        //respawn
-        if((*collisionPtr).type == COLLISION_RIGHT_WALL){
-          gameState.player1Score++;
-          printf("Player 1 scored\n");
-        }
-        else{
-          gameState.player2Score++;
-          printf("Player 2 scored\n");
-        }
-        winner = checkForWin(gameState, END_SCORE);
-        if(winner){
-          printf("Player %d won. Congrats!\n", winner);
-          exit(EXIT_SUCCESS);
-        }
-        ball.position[0] = 0.f;
-        ball.position[1] = genRandYIntersection();
-        ball.yIntersection = ball.position[1]; 
-        ball.angle = genRandAngle();
-        ball.pitch = calculatePitch(ball.angle, emptyCollision);
-        ball.speed = -ball.speed;
+      else if(winner == 2){
+        renderText(scoreProgram, scoreVAO, scoreVBO, playerTwoWonString, playerTwoX, playerOneTwoY, fontScale, fontColorVictory, charMap);
       }
-      else{
-        //ceiling or floor hit
-        if((*collisionPtr).type == COLLISION_TOP){
-          ball.pitch = ball.speed > 0 ? (float)-fabs((double)ball.pitch) : (float) fabs((float)ball.pitch);
-        }
-        else{
-          ball.pitch = ball.speed > 0 ? (float)fabs((double)ball.pitch) : (float)-fabs((double)ball.pitch);
-        }
-        if(canBounce == 1){
-          ball.yIntersection = calculateYIntersection(ball.pitch, (*collisionPtr));
-          canBounce = 0;
-        }
-      }
+      //else -> pass so that it does not render wrong winner in last frame
+
     }
     else{
-      canBounce = 1;
-    }
-    free(collisionPtr);
-    glm_mat4_identity(ballTransformationMatrix);
-    //calculate new y position
-    ball.position[1] = f(ball.position[0], ball.pitch, ball.yIntersection);
-    glm_translate(ballTransformationMatrix, ball.position);
-    unsigned int ballLocation = glGetUniformLocation(ballProgram, "transformation");
-    glUniformMatrix4fv(ballLocation, 1, GL_FALSE, *ballTransformationMatrix);;
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 360);
-    //incr x position
-    ball.position[0] += ball.speed * deltatime; 
+      mat4 playerTransformationMatrix;
+      glm_mat4_identity(playerTransformationMatrix);
+      glm_translate(playerTransformationMatrix, leftPaddle.position);
+      unsigned int playerTransformLocation = glGetUniformLocation(playerProgram, "playerTransform");
+      glUseProgram(playerProgram);
+      glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *playerTransformationMatrix);
+
+      glBindVertexArray(playerVAO);
+      glDrawArrays(GL_TRIANGLES, 0, 6);
+
+      //enemy -> right paddle
+      mat4 enemyTransformationMatrix;
+      glm_mat4_identity(enemyTransformationMatrix);
+      glm_translate(enemyTransformationMatrix, rightPaddle.position);
+      glUniformMatrix4fv(playerTransformLocation, 1, GL_FALSE, *enemyTransformationMatrix);
+
+      glBindVertexArray(enemyVAO);
+      glDrawArrays(GL_TRIANGLES, 0, 6);
+
+      //draw ball
+      glUseProgram(ballProgram);
+      glBindVertexArray(ballVAO);
+      mat4 ballTransformationMatrix;
+      struct Collision* collisionPtr = (struct Collision*)malloc(sizeof(struct Collision));
+      if(checkCollision(ball, leftPaddle, rightPaddle, collisionPtr)){
+        if((*collisionPtr).type == COLLISION_LEFT_PADDLE || (*collisionPtr).type == COLLISION_RIGHT_PADDLE){
+          //paddle hit
+          float angle = calculateAngleOfHit(*collisionPtr, (*collisionPtr).type == COLLISION_LEFT_PADDLE ? leftPaddle : rightPaddle);
+          ball.speed = -ball.speed;
+          ball.angle = angle;
+          ball.pitch = calculatePitch(angle, (*collisionPtr));
+          ball.yIntersection = calculateYIntersection(ball.pitch, (*collisionPtr));
+        }
+        else if((*collisionPtr).type == COLLISION_RIGHT_WALL || (*collisionPtr).type == COLLISION_LEFT_WALL){
+          //respawn
+          if((*collisionPtr).type == COLLISION_RIGHT_WALL){
+            gameState.player1Score++;
+            printf("Player 1 scored\n");
+          }
+          else{
+            gameState.player2Score++;
+            printf("Player 2 scored\n");
+          }
+          winner = checkForWin(gameState, END_SCORE);
+          ball.position[0] = 0.f;
+          ball.position[1] = genRandYIntersection();
+          ball.yIntersection = ball.position[1]; 
+          ball.angle = genRandAngle();
+          ball.pitch = calculatePitch(ball.angle, emptyCollision);
+          ball.speed = -ball.speed;
+        }
+        else{
+          //ceiling or floor hit
+          if((*collisionPtr).type == COLLISION_TOP){
+            ball.pitch = ball.speed > 0 ? (float)-fabs((double)ball.pitch) : (float) fabs((float)ball.pitch);
+          }
+          else{
+            ball.pitch = ball.speed > 0 ? (float)fabs((double)ball.pitch) : (float)-fabs((double)ball.pitch);
+          }
+          if(canBounce == 1){
+            ball.yIntersection = calculateYIntersection(ball.pitch, (*collisionPtr));
+            canBounce = 0;
+          }
+        }
+      }
+      else{
+        canBounce = 1;
+      }
+      free(collisionPtr);
+      glm_mat4_identity(ballTransformationMatrix);
+      //calculate new y position
+      ball.position[1] = f(ball.position[0], ball.pitch, ball.yIntersection);
+      glm_translate(ballTransformationMatrix, ball.position);
+      unsigned int ballLocation = glGetUniformLocation(ballProgram, "transformation");
+      glUniformMatrix4fv(ballLocation, 1, GL_FALSE, *ballTransformationMatrix);;
+      glDrawArrays(GL_TRIANGLE_FAN, 0, 360);
+      //incr x position
+      ball.position[0] += ball.speed * deltatime; 
+   }
 
     //middle line
     glUseProgram(lineProgram);
@@ -450,8 +482,6 @@ int main(){
     glDrawArrays(GL_LINES, 0, 2);
 
     //render score
-    vec3 fontColor = {1.f, 0.f, 0.f};
-    float fontScale = 0.002f;
     float player1ScoreX = -0.1f;
     float player2ScoreX = 0.04f;
     float scoreY = 0.9;
@@ -534,6 +564,14 @@ void updateInput(GLFWwindow* window){
         leftPaddle.position[1] = -1.f;
       }
     }
+  }
+}
+
+void process_input_winner(GLFWwindow* window ,struct GameState* gameState){
+  if(glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS){
+    (*gameState).player1Score = 0;
+    (*gameState).player2Score = 0;
+    winner = 0;
   }
 }
 
