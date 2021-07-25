@@ -240,4 +240,12 @@ void inspectChar(struct Character character){
   printf("Advance: x: %d\n", character.advance);
 }
 
+int checkForWin(struct GameState gameState, int endScore){
+  if(gameState.player1Score >= endScore || gameState.player2Score >= endScore){
+    exit(EXIT_SUCCESS);
+    return gameState.player1Score >= endScore ? 1 : 2;
+  }
+  return 0;
+}
+
 #endif

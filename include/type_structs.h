@@ -8,6 +8,11 @@ enum CollisionType {COLLISION_TOP, COLLISION_BOTTOM, COLLISION_LEFT_PADDLE, COLL
 const char* CollisionTypeNames[7] = {"TOP", "BOTTOM", "LEFT_PADDLE", "RIGHT_PADDLE", "LEFT_WALL", "RIGHT_WALL", "COLLISION_NONE"};
 const int MAX_CAPACITY = 128;
 
+struct GameState{
+  int player1Score;
+  int player2Score;
+};
+
 struct Ball{
   vec3 position;
   float radius;

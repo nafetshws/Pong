@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "../include/helper_functions.h"
 #include "../include/type_structs.h"
 #include "../include/glad/glad/glad.h" 
@@ -20,6 +21,7 @@ const float movementSpeed = 1.f;
 const float BALL_RADIUS = 0.02f;
 const float PADDLE_WIDTH = 0.05f;
 const float PADDLE_HEIGHT = 0.2f;
+const int END_SCORE = 3;
 float deltatime = 0.f;
 float deltaTimeX = 0.f;
 float lastBallXpos = 0.f;
@@ -30,6 +32,8 @@ float newPlayerYCoord = 0.5f;
 float newEnemyYCoord = 0.5f;
 
 const char* TITLE = "PONG";
+
+int winner = 0;
 
 struct Ball ball;
 struct Paddle leftPaddle;
@@ -51,9 +55,13 @@ const float lineVertices[] = {
   0.f, -1.f, 0.f //bottom
 };
 
+int hasCollided = 0;
+float lastAngle;
+float x = 1.f;
+int canBounce = 1;
+
 //set all callback functions
 void error_callback(int error, const char* description);
-//void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void updateInput(GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
@@ -97,12 +105,10 @@ int main(){
     return -1;
   }
 
-  //const char* testString = "Hello world";
-  //printf("Test char: %c\n", testString[2]);
-
   int amountOfChars = 128;
   struct ListMap* charMap = newListMap();
 
+  //load chars
   FT_Set_Pixel_Sizes(face, 0, 48);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   for(unsigned char c = 0; c < amountOfChars; c++){
@@ -116,11 +122,13 @@ int main(){
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
 
+    //set texture parameteres
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    //create character struct
     struct Character character;
     character.textureId = texture;
     character.size[0] = face->glyph->bitmap.width;
@@ -132,17 +140,9 @@ int main(){
     listMapInsert(charMap, c, character);
   }
   
-  //const char * dWord = "dein";
-  //struct Character ch = listMapGetValue(charMap, dWord[0]);
-  //printf("After ----------------------------------\n");
-  //inspectChar(ch);
-
-  //exit(EXIT_FAILURE);
-
   glBindTexture(GL_TEXTURE_2D, 0);
 
   //clear memory
-  //free(characterMap);
   FT_Done_Face(face);
   FT_Done_FreeType(ft);
 
@@ -150,9 +150,16 @@ int main(){
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetErrorCallback(error_callback);
 
+  //create GameState struct
+  struct GameState gameState;
+  gameState.player1Score = 0;
+  gameState.player2Score = 0;
+
+  //create collision struct
   struct Collision emptyCollision;
   emptyCollision.type = COLLISION_NONE;
 
+  //init ball struct
   ball.radius = BALL_RADIUS;
   ball.angle = genRandAngle();
   ball.yIntersection = genRandYIntersection();
@@ -164,6 +171,7 @@ int main(){
     ball.position[i] = ballPos[i];
   }
 
+  //init paddle struct
   vec3 startPaddlePos = {0.f, 0.f, 0.f};
   //left
   for(int i = 0; i < 3; i++){
@@ -198,6 +206,7 @@ int main(){
   lineProgram = glCreateProgram();
   scoreProgram = glCreateProgram();
 
+  //link shader to program
   //player
   glAttachShader(playerProgram, playerVertexShader);
   glAttachShader(playerProgram, playerFragmentShader);;
@@ -217,6 +226,7 @@ int main(){
   glLinkProgram(lineProgram);
   glLinkProgram(scoreProgram);
 
+  //checking for errors when linking
   glGetProgramiv(playerProgram, GL_LINK_STATUS, &success);
   if(!success){
     char message[1024];
@@ -259,7 +269,7 @@ int main(){
   glDeleteShader(scoreVertexShader);
   glDeleteShader(scoreFragmentShader);
 
-  //create circle
+  //create circle vertices for ball
   float circleVertices[360][3];
   float realCircleVertices[360*3];
   createCircleVertices(0.0f, 0.0f, BALL_RADIUS, 360, circleVertices);
@@ -271,6 +281,7 @@ int main(){
     }
   }
 
+  //Create Vertex Buffer objects and Vertex Array objects
   //player
   unsigned int playerVBO, playerVAO;
   //enemy
@@ -288,6 +299,7 @@ int main(){
   glGenVertexArrays(1, &lineVAO);
   glGenVertexArrays(1, &scoreVAO);
 
+  //Send data to buffer
   //player
   glBindVertexArray(playerVAO);
   glGenBuffers(1, &playerVBO);
@@ -335,24 +347,19 @@ int main(){
 
   glBindVertexArray(0);
 
-  int hasCollided = 0;
-  float lastAngle;
-  float x = 1.f;
-
-  int canBounce = 1;
-
+  //render
   while(!glfwWindowShouldClose(window)){
+    //calc delta time -> framerate
     float currentFrame = (float)glfwGetTime();
     deltatime = currentFrame - lastFrame;
     deltaTimeX = (float)fabs((float)1/(ball.position[0] - lastBallXpos));
     lastBallXpos = ball.position[1];
     lastFrame = currentFrame;
-    //render
     double time = glfwGetTime();
-    //glClearColor(0.2f, 02.f, 0.2f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
     updateInput(window);
 
+    //------------------Render objects---------------------
     //player -> left paddle
     mat4 playerTransformationMatrix;
     glm_mat4_identity(playerTransformationMatrix);
@@ -389,7 +396,19 @@ int main(){
       }
       else if((*collisionPtr).type == COLLISION_RIGHT_WALL || (*collisionPtr).type == COLLISION_LEFT_WALL){
         //respawn
-
+        if((*collisionPtr).type == COLLISION_RIGHT_WALL){
+          gameState.player1Score++;
+          printf("Player 1 scored\n");
+        }
+        else{
+          gameState.player2Score++;
+          printf("Player 2 scored\n");
+        }
+        winner = checkForWin(gameState, END_SCORE);
+        if(winner){
+          printf("Player %d won. Congrats!\n", winner);
+          exit(EXIT_SUCCESS);
+        }
         ball.position[0] = 0.f;
         ball.position[1] = genRandYIntersection();
         ball.yIntersection = ball.position[1]; 
@@ -431,23 +450,30 @@ int main(){
     glDrawArrays(GL_LINES, 0, 2);
 
     //render score
-    vec3 color = {1.f, 0.f, 0.f};
-    float scale = 0.002f;
-    float x = 0.1f;
-    float y = 0.8f;
+    vec3 fontColor = {1.f, 0.f, 0.f};
+    float fontScale = 0.002f;
+    float player1ScoreX = -0.1f;
+    float player2ScoreX = 0.04f;
+    float scoreY = 0.9;
 
     //state for text rendering
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    const char* text = "dies ist ein test";
+    //convert score (int to string)
+    char player1ScoreString[2];
+    char player2ScoreString[2];
+    sprintf(player1ScoreString, "%d", gameState.player1Score);
+    sprintf(player2ScoreString, "%d", gameState.player2Score);
+
     glUseProgram(scoreProgram);
     glBindVertexArray(scoreVAO);
     mat4 projection;
     glm_mat4_identity(projection);
     glUniformMatrix4fv(glGetUniformLocation(scoreProgram, "projection"), 1, GL_FALSE, * projection); 
 
-    renderText(scoreProgram, scoreVAO, scoreVBO, text, x, y, scale, color, charMap);
+    renderText(scoreProgram, scoreVAO, scoreVBO, player1ScoreString, player1ScoreX, scoreY, fontScale, fontColor, charMap);
+    renderText(scoreProgram, scoreVAO, scoreVBO, player2ScoreString, player2ScoreX, scoreY, fontScale, fontColor, charMap);
 
     glUseProgram(0);
 
@@ -456,7 +482,6 @@ int main(){
     glfwPollEvents();
   }
 
-  //free(characterMap);
   glfwTerminate();
 
   return 0;
