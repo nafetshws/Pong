@@ -21,11 +21,11 @@ const float fontScale = 0.002f;
 vec3 fontColor = {1.f, 0.f, 0.f};
 vec3 fontColorVictory = {0.f, 1.f, 0.f};
 
-const float movementSpeed = 1.f;
+const float movementSpeed = 1.2f;
 const float BALL_RADIUS = 0.02f;
 const float PADDLE_WIDTH = 0.05f;
 const float PADDLE_HEIGHT = 0.2f;
-const int END_SCORE = 3;
+const int END_SCORE = 5;
 float deltatime = 0.f;
 float deltaTimeX = 0.f;
 float lastBallXpos = 0.f;
@@ -182,14 +182,14 @@ int main(){
   for(int i = 0; i < 3; i++){
     leftPaddle.position[i] = startPaddlePos[i];
   }
-  leftPaddle.left = 1;
+  leftPaddle.isLeft = true;
   leftPaddle.height = PADDLE_HEIGHT;
   leftPaddle.width = PADDLE_WIDTH;
   //right
   for(int i = 0; i < 3; i++){
     rightPaddle.position[i] = startPaddlePos[i];
   }
-  rightPaddle.left = 0;
+  rightPaddle.isLeft = false;
   rightPaddle.height = PADDLE_HEIGHT;
   rightPaddle.width = PADDLE_WIDTH;
 

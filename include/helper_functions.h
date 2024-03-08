@@ -95,12 +95,12 @@ int checkCustomPaddleCollision(struct Ball ball, struct Paddle paddle, struct Co
   int isXAxisAligned = 0;
   enum CollisionType type;
   //x axis -> check if ball is overlapping paddles
-  if(paddle.left && 1.f - fabs((float)(ball.position[0] - ball.radius)) <= paddle.width && 1.f - fabs((float)(ball.position[0] - ball.radius)) >= -0.1){
+  if(paddle.isLeft && ball.speed < 0 && (ball.position[0] - ball.radius) + 1.f <= paddle.width && (ball.position[0] - ball.radius) + 1.f  >= 0.f){
       //left paddle
       isXAxisAligned = 1;
       (*collision).type = COLLISION_LEFT_PADDLE;
   }
-  else if(!paddle.left && 1.f - (ball.position[0] + ball.radius) <= paddle.width && 1.f - (ball.position[0] + ball.radius) >= -0.1){
+  else if(!paddle.isLeft && ball.speed > 0 && 1.f - (ball.position[0] + ball.radius) <= paddle.width && 1.f - (ball.position[0] + ball.radius) >= 0.f){
       //right paddle
       isXAxisAligned = 1;
       (*collision).type = COLLISION_RIGHT_PADDLE;
@@ -162,8 +162,6 @@ float calculateYIntersection(float pitch, struct Collision collision){
 
 float f(float x, float a, float b){
   float y = a*x +b;
-  //printf("A: %f x: %f b: %f\n", a, x, b);
-  //printf("Next value: %f\n", y);
   return a*x + b;
 }
 
@@ -218,9 +216,6 @@ void renderText(uint programId, uint VAO, uint VBO, const char* text, float x, f
       { xpos + w, ypos + h,   1.0f, 0.0f }           
     };
     
-    //print vertices
-    //printf("advance: %f\n", ch.advance);
-
     glBindTexture(GL_TEXTURE_2D, ch.textureId);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);

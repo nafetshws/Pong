@@ -25,7 +25,7 @@ struct Ball{
 
 struct Paddle{
   vec3 position;
-  int left;
+  bool isLeft;
   float width;
   float height;
 };
