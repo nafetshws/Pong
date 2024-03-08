@@ -1,7 +1,12 @@
 # Pong
 A simple pong game that I created with OpenGL in C.
 ![Pong](Pong.png)
-## Compiling and running the game 
+## Controls
+<b>Esc</b>: Close the game \
+<b>Return</b>: Start a new game \
+<b>W/S</b>: Move left paddle up and down \
+<b>Arrow-Keys</b>: Move right paddle up and down 
+## Compiling and running the game
 ### Mac
 You might need to install the following libaries:
 ```shell
