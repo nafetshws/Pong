@@ -2,3 +2,5 @@
 *.swo
 run
 run.exe
+.vscode/
+build/

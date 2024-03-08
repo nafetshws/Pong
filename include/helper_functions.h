@@ -146,14 +146,13 @@ float calculatePitch(float angle, struct Collision collision){
     float pitch = sqrt(power - 1);
     pitch *= negator;
     return pitch; 
-  }
-  else if(collision.type == COLLISION_RIGHT_PADDLE || collision.type == COLLISION_LEFT_PADDLE){
+  } else if(collision.type == COLLISION_RIGHT_PADDLE || collision.type == COLLISION_LEFT_PADDLE){
     float height = (double) fabs((double)(glm_deg(angle) > 0.f ? 1.f - collision.position[1] : -1.f - collision.position[1]));
     float width = (height / tanf(angle)); 
     float pitch = collision.type == COLLISION_RIGHT_PADDLE ? -(height / width) : (height / width);
     return pitch;
   } 
-
+  return 0;
 }
 
 float calculateYIntersection(float pitch, struct Collision collision){
