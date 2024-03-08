@@ -8,18 +8,6 @@
 #include <time.h>
 #include <string.h>
 
-
-//void createShader(unsigned int* vertexShader, const char* vertexShaderSource, unsigned int* fragmentShader, const char* fragmentShaderSource);
-//void createCircleVertices(float cx, float cy, float radius, int amountOfPoints, float vertices[360][3]);
-//int checkCollision(struct Ball ball, struct Paddle leftPaddle, struct Paddle rightPaddle, struct Collision* collision);
-//int checkTopBottomCollision(struct Ball ball, struct Collision* collision){
-//int checkWallCollision(struct Ball ball, struct Collision* collision);
-//int checkCustomPaddleCollision(struct Ball ball, struct Paddle paddle, struct Collision* collision);
-//int checkPaddleCollision(struct Ball ball, struct Paddle leftPaddle, struct Paddle rightPaddle, struct Collision* collision);
-//int calculateAngleOfHit(struct Collision collision, struct Paddle paddle);
-//float f(float x, int angle);
-void inspectChar(struct Character character);
-
 void createShader(unsigned int* vertexShader, const char* vertexShaderSource, unsigned int* fragmentShader, const char* fragmentShaderSource){
   int success;
   //Vertex
@@ -161,7 +149,7 @@ float calculateYIntersection(float pitch, struct Collision collision){
 }
 
 float f(float x, float a, float b){
-  float y = a*x +b;
+  //y = mx + t
   return a*x + b;
 }
 

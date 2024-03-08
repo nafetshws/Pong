@@ -30,7 +30,7 @@ float deltatime = 0.f;
 float deltaTimeX = 0.f;
 float lastBallXpos = 0.f;
 float lastFrame = 0.f;
-const float BALL_SPEED = 1.f;
+const float BALL_SPEED = 1.1f;
 
 float newPlayerYCoord = 0.5f;
 float newEnemyYCoord = 0.5f;
@@ -421,12 +421,20 @@ int main(){
       mat4 ballTransformationMatrix;
       struct Collision* collisionPtr = (struct Collision*)malloc(sizeof(struct Collision));
       if(checkCollision(ball, leftPaddle, rightPaddle, collisionPtr)){
+        //paddle hit
         if((*collisionPtr).type == COLLISION_LEFT_PADDLE || (*collisionPtr).type == COLLISION_RIGHT_PADDLE){
-          //paddle hit
+          //invert direction 
+          ball.speed = ball.speed < 0 ? BALL_SPEED : -BALL_SPEED; 
           float angle = calculateAngleOfHit(*collisionPtr, (*collisionPtr).type == COLLISION_LEFT_PADDLE ? leftPaddle : rightPaddle);
-          ball.speed = -ball.speed;
+          //limit angle
+          if(fabs(angle) > 0.9) angle = angle < 0 ? -0.9 : 0.9;
           ball.angle = angle;
           ball.pitch = calculatePitch(angle, (*collisionPtr));
+          //slow down ball for high angles
+          float speedMultiplicator = BALL_SPEED/fabs(ball.pitch);
+          if(fabs(ball.pitch) > 1) {
+            ball.speed = ball.speed < 0 ? (-BALL_SPEED * speedMultiplicator) : (BALL_SPEED * speedMultiplicator);
+          }
           ball.yIntersection = calculateYIntersection(ball.pitch, (*collisionPtr));
         }
         else if((*collisionPtr).type == COLLISION_RIGHT_WALL || (*collisionPtr).type == COLLISION_LEFT_WALL){
@@ -445,7 +453,7 @@ int main(){
           ball.yIntersection = ball.position[1]; 
           ball.angle = genRandAngle();
           ball.pitch = calculatePitch(ball.angle, emptyCollision);
-          ball.speed = -ball.speed;
+          ball.speed = ball.speed < 0 ? BALL_SPEED : -BALL_SPEED; 
         }
         else{
           //ceiling or floor hit
