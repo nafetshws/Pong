@@ -10,13 +10,17 @@ BUILD_DIR = ./build
 
 mac: build_directory
 	$(CC) -o $(OUT) $(FILES) $(LD_FLAGS_MAC) $(CFLAGS)
-windows:
+windows: build_directory_win
 	$(CC) -o $(OUT).exe $(FILES) $(LDFLAGS_WINDOWS) $(CFLAGS)
 	copy /Y "lib\freetype\windows\freetype.dll" "build\freetype.dll"
 
 .PHONY: build_directory
 build_directory:
 	[ -d $(BUILD_DIR) ] || mkdir -p $(BUILD_DIR)
+
+.PHONY: build_directory_win
+build_directory_win:
+	mkdir $(BUILD_DIR)
 
 .PHONY: clean
 clean:
