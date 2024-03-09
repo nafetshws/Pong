@@ -19,7 +19,13 @@ build/pong #run the game
 ```
 
 ### Windows
+If you have already installed **make** and **mingw** you can just compile and run the program like this:
 ```shell
 make windows
-build/pong
+build\pong.exe
+```
+Otherwise you have to install those first. I recommend using [Chocolatey](https://chocolatey.org/):
+```shell
+choco install mingw
+choco install make
 ```
