@@ -6,21 +6,21 @@ CFLAGS = -I lib/cglm/include -I lib/glfw/include -I lib/freetype/include
 
 FILES = src/main.c src/glad.c
 OUT = build/pong
-BUILD_DIR = ./build
+BUILD_DIR = build
 
 mac: build_directory
 	$(CC) -o $(OUT) $(FILES) $(LD_FLAGS_MAC) $(CFLAGS)
 windows: build_directory_win
 	$(CC) -o $(OUT).exe $(FILES) $(LDFLAGS_WINDOWS) $(CFLAGS)
-	copy /Y "lib\freetype\windows\freetype.dll" "build\freetype.dll"
+	@copy /Y "lib\freetype\windows\freetype.dll" "build\freetype.dll"
 
 .PHONY: build_directory
 build_directory:
-	[ -d $(BUILD_DIR) ] || mkdir -p $(BUILD_DIR)
+	@[ -d $(BUILD_DIR) ] || mkdir -p $(BUILD_DIR)
 
 .PHONY: build_directory_win
 build_directory_win:
-	mkdir $(BUILD_DIR)
+	@if not exist "build" mkdir $(BUILD_DIR)
 
 .PHONY: clean
 clean:
